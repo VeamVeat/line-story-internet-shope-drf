@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.core.validators import RegexValidator, MinValueValidator
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from users.managers import UserManager
 from products.models import File
@@ -20,6 +21,7 @@ class User(AbstractUser):
         unique=True,
     )
     birthday = models.DateField(_('birthday'), null=True)
+    is_blocked = models.BooleanField(default=False)
 
     objects = UserManager()
 
@@ -30,6 +32,13 @@ class User(AbstractUser):
         verbose_name = _('user')
         verbose_name_plural = _('users')
 
+    def tokens(self):
+        refresh = RefreshToken.for_user(self)
+
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token)
+        }
 
     @property
     @admin.display(
@@ -54,8 +63,7 @@ class Profile(models.Model):
                                 null=False,
                                 unique=True)
 
-    image = models.OneToOneField(File, null=True, blank=True, on_delete=models.SET_NULL,
-                              verbose_name=_('profile photo'))
+    image = models.OneToOneField(File, null=True, blank=True, on_delete=models.SET_NULL, verbose_name=_('profile photo'))
 
     def __str__(self):
         return f'{self.user}'
@@ -110,10 +118,3 @@ class Wallet(models.Model):
     def __str__(self):
         return f'{self.ballance}'
 
-
-@receiver(post_save, sender=User)
-def create_profile_and_wallet(sender, instance, created, **kwargs):
-    if created:
-        file = File.objects.create(image='users/photo_profile/default.png')
-        Profile.objects.create(user=instance, image=file)
-        Wallet.objects.create(user=instance)

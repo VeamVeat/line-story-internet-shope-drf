@@ -17,39 +17,38 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include, re_path
-from djoser import permissions
+from rest_framework import permissions
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from rest_framework_simplejwt import views as jwt_views
 from drf_yasg.views import get_schema_view
+# from rest_framework_swagger.views import get_swagger_view
 from drf_yasg import openapi
-
+from djoser.urls import *
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Djoser API",
+        title="Line Story API",
         default_version="v1",
-        description="REST implementation of Django authentication system."
-                    " djoser library provides a set of Django Rest Framework views"
-                    " to handle basic actions such as registration, login, logout,"
-                    " password reset and account activation. It works with custom user model.",
+        description="Test",
 
         contact=openapi.Contact(email="contact@snippets.local"),
         license=openapi.License(name="BSD License"),
     ),
     public=True,
+    permission_classes=(permissions.AllowAny,),
 )
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    re_path(r"^api/v1/docs/$", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui",),
-    path("auth/", include("djoser.urls")),
-    path("auth/", include("djoser.urls.authtoken")),
-    # path("api/v1/", include("djoser.urls.jwt")),
 
-    path('api/v1/users/', include('users.urls')),
-    path('api/v1/product/', include('products.urls'))
+    path('api/jwtauth/', include('jwtauth.urls'), name='jwtauth'),
+    path('api/users/', include('users.urls')),
+    path('api/products/', include('products.urls')),
+
+    path('', schema_view.with_ui('swagger', cache_timeout=0,), name='schema-swagger-ui'),
 ]
 
 if settings.DEBUG:

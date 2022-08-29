@@ -46,8 +46,8 @@ class File(models.Model):
         verbose_name_plural = _('files')
 
     def save(self, *args, **kwargs):
-        self.size = self.image.size
-        self.name, self.type = self.image.name.split('.')
+        # self.size = self.image.size
+        # self.name, self.type = self.image.name.split('.')
         super(File, self).save(*args, **kwargs)
 
     @property
