@@ -23,7 +23,7 @@ class OrderServices:
                     user=self.user,
                     quantity=total_count_product,
                     final_price=total_price_product,
-                    product_list={'products': product_all},
+                    products={'products': product_all},
                     address=address,
                     is_active=True
                 )

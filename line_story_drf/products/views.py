@@ -1,38 +1,26 @@
-from django.http import JsonResponse
 from django.urls import reverse
 from django.views.generic import DeleteView
-from rest_framework.generics import get_object_or_404, ListAPIView, RetrieveAPIView
-from rest_framework.views import APIView
+from django_filters import rest_framework as rest_filters
+from rest_framework import filters, permissions
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 
+from products.filters import ProductFilter
 from products.models import ProductFile, Product
 from products.serializers import ProductSerializer
 
 
 class ProductAPIView(ListAPIView):
+    permission_classes = [permissions.AllowAny]
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    filter_backends = (rest_filters.DjangoFilterBackend, filters.SearchFilter)
+    filterset_fields = ProductFilter
+    # ?search=colored
+    search_fields = ['type__name', 'title']
 
-
-# class ProductDetailAPIView(APIView):
-#     serializer_class = ProductSerializer
-#
-#     @staticmethod
-#     def get_queryset():
-#         products = Product.objects.all()
-#         return products
-#
-#     def get(self, request, *args, **kwargs):
-#         product_id = kwargs.get('pk')
-#         product = get_object_or_404(Product, id=product_id)
-#
-#         product_serializer = ProductSerializer(data=product)
-#         if product_serializer.is_valid():
-#             product_serializer.save()
-#             return JsonResponse(product_serializer.data, status=201)
-#         return JsonResponse(product_serializer.data, status=400)
 
 class ProductDetailAPIView(RetrieveAPIView):
-    lookup_field = "id"
+    lookup_field = "product_id"
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 

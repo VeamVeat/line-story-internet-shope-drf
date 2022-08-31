@@ -47,7 +47,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'jwtauth',
-    "drf_yasg",
     'products',
     'orders',
 
@@ -55,6 +54,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'rest_framework_swagger',
+    'django_filters',
+    "drf_yasg"
 ]
 
 MIDDLEWARE = [
@@ -174,6 +175,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
 FILE_UPLOAD_HANDLERS = [
