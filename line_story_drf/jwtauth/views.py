@@ -18,8 +18,10 @@ from utils.email_notifications import send_email_to_password_reset, send_email_t
 from .serializers import (RegisterSerializer,
                           EmailVerificationSerializer,
                           LoginSerializer,
-                          LogoutSerializer, TokenObtainMySerializer,
-                          SetNewPasswordSerializer)
+                          LogoutSerializer,
+                          TokenObtainMySerializer,
+                          SetNewPasswordSerializer,
+                          ResetPasswordEmailRequestSerializer)
 
 User = get_user_model()
 
@@ -99,11 +101,13 @@ class LogoutAllView(APIView):
 
 
 class TokenObtainPairAPIView(TokenObtainPairView):
-
+    # perm
     serializer_class = TokenObtainMySerializer
 
 
 class RequestPasswordResetEmail(generics.GenericAPIView):
+
+    serializer_class = ResetPasswordEmailRequestSerializer
 
     def post(self, request):
 
@@ -118,6 +122,8 @@ class RequestPasswordResetEmail(generics.GenericAPIView):
 
 
 class PasswordTokenCheckAPI(generics.GenericAPIView):
+
+    serializer_class = SetNewPasswordSerializer
 
     def get(self, request, uidb64, token):
 

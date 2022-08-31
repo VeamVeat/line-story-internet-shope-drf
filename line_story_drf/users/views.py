@@ -58,7 +58,6 @@ class ProfileView(RetrieveUpdateAPIView):
 
     def update(self, request, *args, **kwargs):
         image_data = request.FILES.get("image")
-        # profile_image_id = self.context['request'].user.profile.image.id
         phone = kwargs.get("phone", request.user.profile.phone)
         region = kwargs.get("region", request.user.profile.region)
 

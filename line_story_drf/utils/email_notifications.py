@@ -25,8 +25,11 @@ def send_email_to_password_reset(email, request):
         absolute_url = 'http://' + current_site + relative_link
         email_body = 'Hello, \n user the link below to reset your password \n' + absolute_url
 
-        data = {'email_body': email_body, 'to_email': user.email,
-                'email_subject': 'Reset password'}
+        data = {
+                'email_body': email_body,
+                'to_email': user.email,
+                'email_subject': 'Reset password'
+        }
 
         email = EmailMessage(
             subject=data['email_subject'], body=data['email_body'], to=[data['to_email']]
