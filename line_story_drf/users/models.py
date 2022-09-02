@@ -1,7 +1,5 @@
 from django.utils.timezone import now
 from django.db import models, transaction
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from django.contrib import admin
 from django.utils import timezone
 from django.core.validators import RegexValidator, MinValueValidator
@@ -117,4 +115,3 @@ class Wallet(models.Model):
 
     def __str__(self):
         return f'{self.ballance}'
-

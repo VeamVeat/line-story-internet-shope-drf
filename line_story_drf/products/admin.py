@@ -4,13 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from products.forms import ProductAdminForm
 from products.models import Product, ProductType, ProductFile
-# from orders.models import Reservation
 from products.views import DeleteProductFile
-
-
-# @admin.register(Reservation)
-# class ReservationAdmin(admin.ModelAdmin):
-#     list_display = ('user', 'product', 'quantity', 'is_reserved')
 
 
 @admin.register(ProductType)

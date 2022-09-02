@@ -1,7 +1,6 @@
 from django import forms
-from django.utils.translation import gettext_lazy as _
+
 from products.models import Product
-# from orders.models import Reservation
 
 
 class ProductAdminForm(forms.ModelForm):

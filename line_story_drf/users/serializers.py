@@ -1,8 +1,6 @@
 from rest_framework import serializers
-from rest_framework.generics import get_object_or_404
 
 from products.models import File
-# from products.models import File
 from users.models import Profile, User
 
 
@@ -26,3 +24,20 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
+
+
+class BlockingUserSerializer(serializers.ModelSerializer):
+    is_blocked = serializers.BooleanField(required=True)
+
+    def update(self, instance, validated_data):
+        user_service = self.context['user_service']
+        user = user_service.blocking_user()
+
+        return user
+
+    class Meta:
+        fields = ('is_blocked',)
+        model = User
+
+
+

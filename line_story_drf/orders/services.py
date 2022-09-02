@@ -7,7 +7,8 @@ from products.models import Product
 # from orders.tasks import send_purchase_of_goods_notification_task
 
 
-class OrderServices:
+class OrderService:
+
     def __init__(self,
                  user,
                  model=None,
@@ -34,7 +35,8 @@ class OrderServices:
         return instance
 
 
-class CartItemServices:
+class CartItemService:
+
     def __init__(self,
                  user,
                  model=None,
@@ -57,12 +59,25 @@ class CartItemServices:
 
     def get_total_price(self):
         cart_item_current_user = self.__get_all_cart_item()
-        total_price = cart_item_current_user.aggregate(total_price=models.Sum(F('product__price') * F('quantity')))
+
+        total_price = cart_item_current_user.aggregate(
+            total_price=models.Sum(F('product__price') * F('quantity'))
+        )
         return total_price['total_price']
+
+    def check_money_for_order(self):
+        total_price = self.get_total_price()
+        user_balance = self.user.wallet.ballance
+
+        is_user_money = user_balance < total_price
+        return is_user_money
 
     def get_total_product_count(self):
         cart_item_current_user = self.__get_all_cart_item()
-        total_count = cart_item_current_user.aggregate(total_count=models.Sum(F('quantity')))
+
+        total_count = cart_item_current_user.aggregate(
+            total_count=models.Sum(F('quantity'))
+        )
         return total_count['total_count']
 
     def get_quantity_product_in_cart(self):
@@ -107,11 +122,16 @@ class CartItemServices:
 
     def get_products_list(self):
         cart_item_current_user = self.__get_all_cart_item()
-        all_products_in_the_dict = [product.product.get_product_in_the_dict for product in cart_item_current_user]
+        all_products_in_the_dict = [product.product.get_product_in_the_dict
+                                    for product in cart_item_current_user]
         return all_products_in_the_dict
 
     def delete_product(self):
-        product_in_cart = get_object_or_404(self.model, user=self.user, product_id=self.product_id)
+        product_in_cart = get_object_or_404(
+                          self.model,
+                          user=self.user,
+                          product_id=self.product_id
+        )
         product = get_object_or_404(Product, id=self.product_id)
 
         product.quantity += product_in_cart.quantity
@@ -132,7 +152,8 @@ class CartItemServices:
         self.model.objects.filter(user=self.user).delete()
 
 
-class ReservationServices:
+class ReservationService:
+
     def __init__(self,
                  user,
                  model=None,
@@ -167,7 +188,11 @@ class ReservationServices:
         return object_reservation
 
     def deleting_reserved_product(self):
-        reserved_product = get_object_or_404(self.model, user=self.user, product_id=self.product_id)
+        reserved_product = get_object_or_404(
+                           self.model,
+                           user=self.user,
+                           product_id=self.product_id
+        )
         product = get_object_or_404(Product, id=self.product_id)
 
         product.quantity += reserved_product.quantity

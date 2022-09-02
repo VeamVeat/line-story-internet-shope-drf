@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models import JSONField
 from django.utils.translation import gettext_lazy as _
 
-from utils.mixins import CreatedAtMixin
+from utils.mixins.model_mixins import CreatedAtMixin
 from line_story_drf import settings
 from orders.managers import CartItemManager, ReservationManager
 

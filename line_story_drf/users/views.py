@@ -1,43 +1,17 @@
-from tokenize import TokenError
-
-from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import redirect
-from django.urls import reverse
-from django.views import View
-from django.views.generic import DeleteView
-from rest_framework.generics import RetrieveUpdateAPIView, get_object_or_404
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from django.contrib import auth
-from django.utils.translation import gettext_lazy as _
-from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import mixins, permissions
+from rest_framework.generics import RetrieveUpdateAPIView, get_object_or_404
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.viewsets import GenericViewSet
 
 from products.models import File
 from users.models import Profile
-from users.serializers import ProfileSerializer
-from line_story_drf.settings import SIMPLE_JWT
-
+from users.serializers import ProfileSerializer, BlockingUserSerializer
+from users.services import UserService
+from utils.mixins.viewset_mixins import ViewSetMixin
 
 User = auth.get_user_model()
-
-
-# class LogoutView(APIView):
-#     permission_classes = (IsAuthenticated,)
-#
-#     def post(self, request):
-#         try:
-#             refresh_token = request.data["refresh_token"]
-#             token = RefreshToken(refresh_token)
-#             token.blacklist()
-#
-#             return Response(status=status.HTTP_205_RESET_CONTENT)
-#         except Exception as e:
-#             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class ProfileView(RetrieveUpdateAPIView):
@@ -71,22 +45,42 @@ class ProfileView(RetrieveUpdateAPIView):
         profile.save()
 
 
-class BlockedUserView(APIView):
-    model = User
+class BlockingUserView(mixins.UpdateModelMixin,
+                       ViewSetMixin,
+                       GenericViewSet):
 
-    def post(self, request, user_id):
+    queryset = User.objects.all()
+    serializer_class = BlockingUserSerializer
+    lookup_field = 'user_id'
+    permission_classes = (permissions.IsAuthenticated,)
 
-        user = User.objects.get(id=user_id)
-        refresh = str(RefreshToken.for_user(user))
+    serializer_class_by_action = {
+        'partial_update': BlockingUserSerializer,
+    }
 
-        is_token_blacklist = BlacklistedToken.objects.filter(token__jti=refresh).exists()
+    def get_serializer(self, *args, **kwargs):
+        user_email = args[0]
 
-        if not user.is_blocked:
-            user.is_blocked = True
-            user.save()
+        serializer_class = self.get_serializer_class()
+        kwargs['context'] = self.get_serializer_context()
 
-            if not is_token_blacklist:
-                RefreshToken(refresh).blacklist()
+        user_service = UserService(email=user_email)
+        user_service_kwargs = {
+            'user_service': user_service
+        }
+        kwargs['context'].update(user_service_kwargs)
+        return serializer_class(*args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        user_id = kwargs.get('user_id')
+
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
 
         return redirect('admin:users_user_change', object_id=user_id)
-

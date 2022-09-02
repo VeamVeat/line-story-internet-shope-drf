@@ -1,14 +1,12 @@
 from decimal import Decimal
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
-from django.dispatch import receiver
-from django.db.models.signals import post_save
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 
 from products.managers import ProductManager
-from utils.mixins import CreatedAtMixin
+from utils.mixins.model_mixins import CreatedAtMixin
 
 
 class ProductType(models.Model):

@@ -1,3 +1,5 @@
+from abc import ABC
+
 from django.contrib import auth
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.exceptions import ValidationError
@@ -15,46 +17,57 @@ User = auth.get_user_model()
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
-    password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True, label=_('Confirm password'))
-    birthday = serializers.DateField(required=True, style={'input_type': 'date'})
+    password = serializers.CharField(
+                           write_only=True,
+                           required=True,
+                           style={'input_type': 'password'}
+    )
+    password2 = serializers.CharField(
+                            style={'input_type': 'password'},
+                            write_only=True,
+                            label=_('Confirm password')
+    )
+    birthday = serializers.DateField(
+                           required=True,
+                           style={'input_type': 'date'}
+    )
 
     class Meta:
         model = User
         fields = ['email', 'password', 'password2', 'birthday']
         extra_kwargs = {'password': {'write_only': True}}
 
-    def validate(self, attrs):
-        dob = attrs['birthday']
-        email = attrs['email']
-        password = attrs['password']
-        password2 = attrs['password2']
+    def validate_email(self, value):
+        email = value['email']
+
+        if email and User.objects.filter(email=email).exists():
+            raise serializers.ValidationError(
+                {'email': 'Email addresses must be unique.'}
+            )
+        return value
+
+    def validate_birthday(self, value):
+        dob = value['birthday']
 
         today = now()
         age = today.year - dob.year - (
                 (today.month, today.day) < (dob.month, dob.day))
         if age < 18:
             raise ValidationError('Must be at least 18 years old to register')
+        return value
 
-        if email and User.objects.filter(email=email).exists():
-            raise serializers.ValidationError(
-                {'email': 'Email addresses must be unique.'}
-            )
+    def validate(self, attrs):
+        password = attrs['password']
+        password2 = attrs['password2']
+
         if password != password2:
             raise serializers.ValidationError({'password': 'The two passwords differ.'})
 
-        data = super(RegisterSerializer, self).validate(attrs)
-        return data
+        return attrs
 
     def create(self, validated_data):
-        email = validated_data['email']
-        password = validated_data['password']
-        birthday = validated_data['birthday']
-
-        user = User(email=email, birthday=birthday)
-        user.set_password(password)
-        user.is_active = False
-        user.save()
+        user_service = self.context['user_services']
+        user = user_service.register_user()
         return user
 
 
@@ -64,6 +77,11 @@ class EmailVerificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         field = ['token']
+
+    def update(self, instance, validated_data):
+        user_service = self.context['user_services']
+        instance = user_service.confirm_registration()
+        return instance
 
 
 class LoginSerializer(serializers.ModelSerializer):
@@ -87,14 +105,10 @@ class LoginSerializer(serializers.ModelSerializer):
             raise AuthenticationFailed('Your account is blocked')
         if not user.is_active:
             raise AuthenticationFailed('Account disabled, contact admin')
-
-        return {
-            'email': user.email,
-            'tokens': user.tokens
-        }
+        return attrs
 
 
-class LogoutSerializer(serializers.Serializer):
+class LogoutSerializer(serializers.Serializer, ABC):
 
     refresh = serializers.CharField()
 
@@ -116,7 +130,7 @@ class LogoutSerializer(serializers.Serializer):
             self.fail('bad_token')
 
 
-class TokenObtainMySerializer(TokenObtainPairSerializer):
+class TokenObtainMySerializer(TokenObtainPairSerializer, ABC):
 
     def validate(self, attrs):
         email = attrs[self.username_field]
@@ -131,7 +145,7 @@ class TokenObtainMySerializer(TokenObtainPairSerializer):
         return data
 
 
-class ResetPasswordEmailRequestSerializer(serializers.Serializer):
+class ResetPasswordEmailSerializer(serializers.Serializer, ABC):
 
     email = serializers.EmailField(min_length=2)
 

@@ -8,15 +8,18 @@ from products.filters import ProductFilter
 from products.models import ProductFile, Product
 from products.serializers import ProductSerializer
 
+# permission на каждую вьюху (заблокирован ли пользователь, ...)
+
 
 class ProductAPIView(ListAPIView):
     permission_classes = [permissions.AllowAny]
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     filter_backends = (rest_filters.DjangoFilterBackend, filters.SearchFilter)
-    filterset_fields = ProductFilter
-    # ?search=colored
+    filterset_class = ProductFilter
     search_fields = ['type__name', 'title']
+    ordering_fields = ('title', '-year')
+    ordering = ('-year',)
 
 
 class ProductDetailAPIView(RetrieveAPIView):

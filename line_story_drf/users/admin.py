@@ -5,7 +5,7 @@ from django.utils.safestring import mark_safe
 from products.models import File
 from users.forms import ProfileAdminForm
 from users.models import User, Profile
-from users.views import BlockedUserView
+from users.views import BlockingUserView
 
 
 @admin.register(User)
@@ -34,7 +34,7 @@ class UserAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         my_urls = [
             path('<user_id>',
-                 self.admin_site.admin_view(BlockedUserView.as_view()),
+                 self.admin_site.admin_view(BlockingUserView.as_view({'post': 'partial_update'})),
                  name='blocked_user'),
         ]
         return my_urls + urls

@@ -32,7 +32,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = bool(int(os.getenv("DEBUG")))
 
 ALLOWED_HOSTS = ['*']
-
+HTTP_SEND_EMAIL = 'http'
 AUTH_USER_MODEL = 'users.User'
 # Application definition
 
