@@ -41,7 +41,7 @@ class CartViewSet(mixins.CreateModelMixin,
 
         serializer_class = self.get_serializer_class()
         kwargs['context'] = self.get_serializer_context()
-        user = kwargs['context']['request'].user
+        user = kwargs.get('context').get('request').user
 
         cart_item_services = CartItemService(
                              user=user,
@@ -132,7 +132,7 @@ class ReservationViewSet(mixins.CreateModelMixin,
 
         serializer_class = self.get_serializer_class()
         kwargs['context'] = self.get_serializer_context()
-        user = kwargs['context']['request'].user
+        user = kwargs.get('context').get('request').user
 
         reservation_services = ReservationService(
                                user=user,
@@ -149,7 +149,7 @@ class ReservationViewSet(mixins.CreateModelMixin,
         return Reservation.objects.filter(user=self.request.user)
 
     def destroy(self, request, *args, **kwargs):
-        product_id = kwargs['product_id']
+        product_id = kwargs.get('product_id')
 
         reserved_services = ReservationService(
                             user=request.user,

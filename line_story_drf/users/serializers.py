@@ -18,12 +18,30 @@ class ImageProfileSerializer(serializers.ModelSerializer):
         fields = ("image",)
 
 
-class ProfileSerializer(serializers.ModelSerializer):
-    image = ImageProfileSerializer()
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    phone = serializers.CharField(min_length=10)
+    region = serializers.CharField(min_length=5)
+    image = ImageProfileSerializer(read_only=True)
+    age = serializers.IntegerField(min_value=5, max_value=120)
 
     class Meta:
         model = Profile
-        fields = '__all__'
+        fields = ('phone', 'region', 'image', 'age')
+
+    def update(self, instance, validated_data):
+        user_service = self.context['user_service']
+        profile = user_service.update_profile()
+
+        return profile
+
+
+class ProfileDetailSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    image = ImageProfileSerializer(read_only=True)
+
+    class Meta:
+        model = Profile
+        exclude = ('id',)
 
 
 class BlockingUserSerializer(serializers.ModelSerializer):
@@ -38,6 +56,8 @@ class BlockingUserSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('is_blocked',)
         model = User
+
+
 
 
 

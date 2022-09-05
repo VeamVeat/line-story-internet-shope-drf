@@ -30,7 +30,3 @@ urlpatterns = [
     path("token/", TokenObtainPairAPIView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]
-
-# path("password-reset-email/", PasswordResetEmail.as_view(), name="password-reset-email"),
-# path("password-reset-confirm/<uidb64>/<token>/", PasswordTokenCheckAPI.as_view(), name="password-reset-confirm"),
-# path("password-reset-complete/", SetNewPasswordAPIView.as_view(), name="password-reset-complete"),

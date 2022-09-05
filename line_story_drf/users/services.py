@@ -1,7 +1,7 @@
 import logging
 from uuid import uuid4
 
-import redis
+from django.http import Http404
 from django.utils.encoding import smart_bytes, force_str
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
@@ -16,7 +16,11 @@ from django.core.mail import EmailMessage
 from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 
-from line_story_drf.settings import HTTP_SEND_EMAIL
+from django.conf import settings
+
+from products.models import File
+from users.models import Profile
+from utils.connect_redis import redis_service
 
 
 class UserService:
@@ -24,8 +28,12 @@ class UserService:
                  user_id=None,
                  email=None,
                  password=None,
+                 image=None,
                  birthday=None,
                  request=None,
+                 phone=None,
+                 region=None,
+                 age=None,
                  token=None,
                  uid64=None):
 
@@ -37,6 +45,10 @@ class UserService:
         self.request = request
         self.token = token
         self.uid64 = uid64
+        self.image = image
+        self.region = region,
+        self.age = age,
+        self.phone = phone,
         self.logger = logging.getLogger(__name__)
 
     def blocking_user(self):
@@ -64,10 +76,9 @@ class UserService:
 
     def confirm_registration(self):
         """
-        Сделать подтверждение через Redis
-        :return: response_massage
+        Протестировано
         """
-        connect_redis = redis.StrictRedis(host='localhost', port=6379, db=0)
+        connect_redis = redis_service.get_connect()
         user_id = connect_redis.get(self.token)
 
         user = get_object_or_404(auth.get_user_model(), pk=int(user_id))
@@ -89,16 +100,27 @@ class UserService:
         user.save()
         return user
 
-    def validate_email(self):
+    def update_profile(self):
+        """
+        Протестированно
+        """
+        new_image_profile = get_object_or_404(File, id=self.request.user.profile.image.id)
+        new_image_profile.image = self.image
+        new_image_profile.save()
 
-        is_user_exist = self.model.objects.filter(email=self.email).exists()
+        profile = get_object_or_404(Profile, id=self.request.user.profile.id)
+        profile.phone = self.phone
+        profile.region = self.region
+        profile.age = self.age
+        profile.save()
 
-        if not is_user_exist:
-            response = Response(
-                {'error': 'User not exists'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-            return response
+        return profile
+
+    def send_massage_reset_link(self):
+        '''
+        Имя метода
+        '''
+        self.__is_user_exist()
         self.__send_email_to_password_reset()
 
         response = Response({'success': 'We have sent you a link to reset your password'},
@@ -119,6 +141,12 @@ class UserService:
         except Exception as exp:
             raise AuthenticationFailed('The reset link is isvalid', 401)
 
+    def __is_user_exist(self):
+        is_user_exist = self.model.objects.filter(email=self.email).exists()
+
+        if not is_user_exist:
+            raise Http404('User not exists')
+
     def __send_email_to_password_reset(self):
         """
         Отправка письма для сброса пароля
@@ -130,7 +158,7 @@ class UserService:
 
         relative_link = f'password-reset-confirm/{uidb64}/{token}/'
 
-        absolute_url = HTTP_SEND_EMAIL + '://' + current_site + '/' + relative_link
+        absolute_url = settings.HTTP_SEND_EMAIL + '://' + current_site + '/' + relative_link
         email_body = 'Hello, \n user the link below to reset your password \n' + absolute_url
 
         data = {
@@ -149,19 +177,18 @@ class UserService:
     def __send_email_to_register_user(self):
         """
         Отправка письма для активации аккаунта
-        :return:
         """
         user = self.model.objects.get(email=self.email)
 
         rand_token = str(uuid4())
         user_id = user.pk
-        connect_redis = redis.StrictRedis(host='localhost', port=6379, db=0)
+        connect_redis = redis_service.get_connect()
         connect_redis.set(str(rand_token), str(user_id))
 
         current_site = get_current_site(self.request).domain
         relative_link = reverse('email-verify')
 
-        absolute_url = HTTP_SEND_EMAIL + '://' + current_site + relative_link + "?token=" + str(rand_token)
+        absolute_url = settings.HTTP_SEND_EMAIL + '://' + current_site + relative_link + "?token=" + str(rand_token)
         email_body = 'Hi ' + user.email + 'user the link below to verify your email \n' + absolute_url
 
         data = {'email_body': email_body, 'to_email': user.email,

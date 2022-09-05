@@ -5,16 +5,21 @@ from products.models import Product
 
 
 class ProductFilter(rest_filters.FilterSet):
-    year = NumberFilter(field_name='year', method='filter_year_fo_type')
-    type = CharFilter(field_name='type__name', method='filter_year_fo_type')
+    year = NumberFilter(field_name='year', method='filter_year')
+    type = CharFilter(field_name='type__name', method='filter_type')
 
-    def filter_year_fo_type(self, queryset, name, value):
+    def filter_year(self, queryset, name, value):
         year_product = self.request.GET.getlist("year")
+        queryset = queryset.filter(
+            year__in=year_product
+        )
+        return queryset
+
+    def filter_type(self, queryset, name, value):
         type_product = self.request.GET.getlist("type")
 
         queryset = queryset.filter(
-            Q(year__in=year_product) &
-            Q(type__name__in=type_product)
+            type__name__in=type_product
         )
         return queryset
 

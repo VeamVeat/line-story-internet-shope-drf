@@ -34,7 +34,6 @@ DEBUG = bool(int(os.getenv("DEBUG")))
 ALLOWED_HOSTS = ['*']
 HTTP_SEND_EMAIL = 'http'
 AUTH_USER_MODEL = 'users.User'
-# Application definition
 
 INSTALLED_APPS = [
     'users',
@@ -235,18 +234,9 @@ else:
     EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
     EMAIL_USE_TLS = bool(int(os.getenv("EMAIL_USE_TLS")))
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "asgi_redis.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [('localhost', 6379)],
-        },
-        "ROUTING": "multichat.routing.channel_routing",
-    },
-}
 
-REDIS_HOST = '0.0.0.0'
-REDIS_PORT = '6379'
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = os.getenv("REDIS_PORT", "8080")
 
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 

@@ -65,7 +65,7 @@ class CartItemService:
         )
         return total_price['total_price']
 
-    def check_money_for_order(self):
+    def check_money_for_make_order(self):
         total_price = self.get_total_price()
         user_balance = self.user.wallet.ballance
 

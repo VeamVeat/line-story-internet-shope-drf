@@ -1,37 +1,56 @@
 from django.shortcuts import redirect
 from django.contrib import auth
 from rest_framework import mixins, permissions
-from rest_framework.generics import RetrieveUpdateAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
-from products.models import File
 from users.models import Profile
-from users.serializers import ProfileSerializer, BlockingUserSerializer
+from users.serializers import (
+    ProfileDetailSerializer,
+    BlockingUserSerializer,
+    ProfileUpdateSerializer)
 from users.services import UserService
 from utils.mixins.viewset_mixins import ViewSetMixin
 
 User = auth.get_user_model()
 
 
-class ProfileView(RetrieveUpdateAPIView):
+class ProfileView(mixins.UpdateModelMixin,
+                  mixins.RetrieveModelMixin,
+                  ViewSetMixin,
+                  GenericViewSet):
+
     queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
+    serializer_class = ProfileUpdateSerializer
+    lookup_field = 'pk'
     permission_classes = (IsAuthenticated,)
 
-    def update(self, request, *args, **kwargs):
-        image_data = request.FILES.get("image")
-        phone = kwargs.get("phone", request.user.profile.phone)
-        region = kwargs.get("region", request.user.profile.region)
+    serializer_class_by_action = {
+        'partial_update': ProfileUpdateSerializer,
+        'retrieve': ProfileDetailSerializer
+    }
 
-        new_image_profile = get_object_or_404(File, id=request.user.profile.image.id)
-        new_image_profile.image = image_data
-        new_image_profile.save()
+    def get_serializer(self, *args, **kwargs):
 
-        profile = get_object_or_404(Profile, id=request.user.profile.id)
-        profile.phone = phone
-        profile.region = region
-        profile.save()
+        serializer_class = self.get_serializer_class()
+        kwargs['context'] = self.get_serializer_context()
+        initial_data = dict()
+
+        if self.action == 'partial_update':
+            initial_data = {
+                'age': kwargs.get('data').get('phone'),
+                'phone': kwargs.get('data').get('phone'),
+                'region': kwargs.get('data').get('region'),
+                'image': kwargs.get('data').get('image'),
+                'request': kwargs.get('context').get('request')
+            }
+
+        user_service = UserService(**initial_data)
+        user_service_kwargs = {
+            'user_service': user_service
+        }
+        kwargs['context'].update(user_service_kwargs)
+        return serializer_class(*args, **kwargs)
 
 
 class BlockingUserView(mixins.UpdateModelMixin,

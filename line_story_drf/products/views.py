@@ -8,8 +8,6 @@ from products.filters import ProductFilter
 from products.models import ProductFile, Product
 from products.serializers import ProductSerializer
 
-# permission на каждую вьюху (заблокирован ли пользователь, ...)
-
 
 class ProductAPIView(ListAPIView):
     permission_classes = [permissions.AllowAny]

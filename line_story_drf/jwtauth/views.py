@@ -1,4 +1,3 @@
-import redis
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from rest_framework.generics import get_object_or_404
@@ -19,6 +18,7 @@ from jwtauth.serializers import (
     SetNewPasswordSerializer,
     ResetPasswordEmailSerializer,
 )
+from utils.connect_redis import redis_service
 from utils.mixins import viewset_mixins
 
 User = get_user_model()
@@ -66,7 +66,6 @@ class RegisterUserViewSet(mixins.CreateModelMixin,
         return User.objects.filter(user=self.request.user)
 
 
-# redis
 class VerifyEmailViewSet(mixins.UpdateModelMixin,
                          GenericViewSet):
     serializer_class = EmailVerificationSerializer
@@ -76,11 +75,12 @@ class VerifyEmailViewSet(mixins.UpdateModelMixin,
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
-
         token = request.data.get('token')
-        r = redis.StrictRedis(host='localhost', port=6379, db=0)
-        user_id = r.get(token)
+
+        connect_redis = redis_service.get_connect()
+        user_id = connect_redis.get(token)
         user_id = int(user_id)
+
         instance = get_object_or_404(User, pk=user_id)
 
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -154,11 +154,11 @@ class PasswordResetViewSet(mixins.UpdateModelMixin,
         email = request.data['email']
 
         user_service = UserService(email=email, request=request)
-        response = user_service.validate_email()
+        response = user_service.send_massage_reset_link()
 
         return response
 
-    @action(methods=['post'],
+    @action(methods=['POST'],
             detail=False,
             url_path=r'confirm/(?P<uid64>\w+)/(?P<token>[-\w]+)',
             url_name='confirm')

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
 from orders.models import CartItem, Reservation, Order
-from orders.services import CartItemService, ReservationService, OrderService
+from orders.services import CartItemService, OrderService
 from products.models import Product
 from products.serializers import ProductSerializer
 from users.serializers import UserSerializer
@@ -62,7 +62,7 @@ class ReservedProductSerializer(serializers.ModelSerializer):
         product = get_object_or_404(Product, id=product_id)
         if product.quantity >= count_product:
             raise serializers.ValidationError(
-                {"error": "the selected quantity exceeds the quantity in stock"}
+                {"error": "The selected quantity exceeds the quantity in stock"}
             )
         return attrs
 
@@ -96,7 +96,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
 
         cart_item_services = CartItemService(user=user, model=CartItem)
-        is_user_money = cart_item_services.check_money_for_order()
+        is_user_money = cart_item_services.check_money_for_make_order()
 
         if not is_user_money:
             raise serializers.ValidationError(

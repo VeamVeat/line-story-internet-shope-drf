@@ -21,5 +21,6 @@ from users.views import ProfileView
 app_name = 'users'
 
 urlpatterns = [
-    path('profile/<int:pk>', ProfileView.as_view(), name='profile_detail'),
+    path('profile/<int:pk>', ProfileView.as_view({'patch': 'partial_update',
+                                                  'get': 'retrieve'}), name='profile_detail'),
 ]
