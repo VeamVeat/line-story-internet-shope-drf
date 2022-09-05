@@ -11,7 +11,7 @@ class TypeSerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    # user = UserSerializer(read_only=True)
     type = TypeSerializer(read_only=True)
 
     class Meta:

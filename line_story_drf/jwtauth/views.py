@@ -1,11 +1,13 @@
-from rest_framework import generics, status, permissions, mixins
-from rest_framework.viewsets import GenericViewSet
+import redis
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from rest_framework import permissions, mixins, status
+from rest_framework.decorators import action
+from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
-from django.utils.http import urlsafe_base64_decode
 
 from users.services import UserService
 from jwtauth.serializers import (
@@ -15,138 +17,190 @@ from jwtauth.serializers import (
     LogoutSerializer,
     TokenObtainMySerializer,
     SetNewPasswordSerializer,
-    ResetPasswordEmailRequestSerializer,
+    ResetPasswordEmailSerializer,
 )
+from utils.mixins import viewset_mixins
 
 User = get_user_model()
 
 
 class LoginViewSet(mixins.CreateModelMixin,
                    GenericViewSet):
+    """
+    Протестированно
+    """
     serializer_class = LoginSerializer
     permission_classes = (permissions.AllowAny,)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
 
-class LogoutViewSet(mixins.CreateModelMixin,
+        user_response_data = {
+            'email': user.email,
+        }
+
+        user_response_data.update(user.tokens)
+        return Response(user_response_data, status=status.HTTP_201_CREATED)
+
+
+class LogoutViewSet(mixins.UpdateModelMixin,
                     GenericViewSet):
+    """
+    Протестированно
+    """
     serializer_class = LogoutSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
 
 class RegisterUserViewSet(mixins.CreateModelMixin,
                           GenericViewSet):
-
+    """
+    Протестированно
+    """
     serializer_class = RegisterSerializer
     permission_classes = (permissions.AllowAny,)
 
-    def get_serializer(self, *args, **kwargs):
-        email = kwargs.get('email')
-        password = kwargs.get('password')
-        birthday = kwargs.get('birthday')
-
-        serializer_class = self.get_serializer_class()
-        kwargs['context'] = self.get_serializer_context()
-
-        user_service = UserService(
-                       email=email,
-                       password=password,
-                       birthday=birthday
-        )
-
-        user_service_kwargs = {
-            'user_service': user_service
-        }
-        kwargs['context'].update(user_service_kwargs)
-        return serializer_class(*args, **kwargs)
-
     def get_queryset(self):
         return User.objects.filter(user=self.request.user)
 
 
-class VerifyEmail(mixins.UpdateModelMixin,
-                  GenericViewSet):
-
+# redis
+class VerifyEmailViewSet(mixins.UpdateModelMixin,
+                         GenericViewSet):
     serializer_class = EmailVerificationSerializer
+    queryset = User.objects.all()
+    lookup_field = 'token'
+    permission_classes = (permissions.AllowAny,)
 
-    def get_serializer(self, *args, **kwargs):
-        token = kwargs.get('token')
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
 
-        serializer_class = self.get_serializer_class()
-        kwargs['context'] = self.get_serializer_context()
-        request = kwargs['context'].request
+        token = request.data.get('token')
+        r = redis.StrictRedis(host='localhost', port=6379, db=0)
+        user_id = r.get(token)
+        user_id = int(user_id)
+        instance = get_object_or_404(User, pk=user_id)
 
-        user_service = UserService(token=token, request=request)
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
-        user_service_kwargs = {
-            'user_service': user_service
-        }
-        kwargs['context'].update(user_service_kwargs)
-        return serializer_class(*args, **kwargs)
+        return Response({'success': 'User activated'},
+                        status=status.HTTP_200_OK)
 
-    def get_queryset(self):
-        return User.objects.filter(user=self.request.user)
+    def perform_update(self, serializer):
+        serializer.save()
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
 
 
 class TokenObtainPairAPIView(TokenObtainPairView):
-
+    """
+    Протестированно
+    """
     serializer_class = TokenObtainMySerializer
 
 
-class RequestPasswordResetEmail(generics.GenericAPIView):
+class PasswordResetViewSet(mixins.UpdateModelMixin,
+                           viewset_mixins.ViewSetMixin,
+                           GenericViewSet):
+    serializer_class = None
+    queryset = User.objects.all()
+    permission_classes = (permissions.IsAuthenticated,)
 
-    serializer_class = ResetPasswordEmailSerializer
+    serializer_class_by_action = {
+        'email': ResetPasswordEmailSerializer,
+        'complete': SetNewPasswordSerializer,
+    }
 
-    def post(self, request):
+    def get_object(self):
+        queryset = self.filter_queryset(self.get_queryset())
+        obj = queryset.get(pk=self.request.user.id)
+        self.check_object_permissions(self.request, obj)
+        return obj
 
+    def get_serializer(self, *args, **kwargs):
+        """
+        Протестированно
+        """
+        serializer_class = self.get_serializer_class()
+        kwargs['context'] = self.get_serializer_context()
+
+        request = kwargs.get('context').get('request')
+
+        initialization_data = {
+            'request': request,
+            'password': request.data.get('password')
+        }
+
+        user_service = UserService(**initialization_data)
+
+        user_service_kwargs = {
+            'user_service': user_service
+        }
+        kwargs['context'].update(user_service_kwargs)
+        return serializer_class(*args, **kwargs)
+
+    @action(methods=['POST'],
+            detail=False)
+    def email(self, request, *args, **kwargs):
+        """
+        отправка письма с ссылкой на активацию аккаунта (Протестированно)
+        """
         email = request.data['email']
-        is_user_exist = User.objects.filter(email=email).exists()
 
-        if not is_user_exist:
-            return Response({'error': 'User not exists'},
-                            status=status.HTTP_404_NOT_FOUND)
+        user_service = UserService(email=email, request=request)
+        response = user_service.validate_email()
 
-        send_email_to_password_reset(email, request)
+        return response
 
+    @action(methods=['post'],
+            detail=False,
+            url_path=r'confirm/(?P<uid64>\w+)/(?P<token>[-\w]+)',
+            url_name='confirm')
+    def confirm(self, request, *args, **kwargs):
+        """
+        Принять uid64б token -> проверить валидность ссылки для сброса пароля (Протестированно)
+        """
+        uid64 = kwargs.get('uid64', None)
+        token = kwargs.get('token', None)
+
+        user_service = UserService(uid64=uid64, token=token)
+        user_service.check_token_to_reset_password()
+        return Response({'success': 'True',
+                         'uid64': uid64,
+                         'token': token},
+                        status=status.HTTP_200_OK)
+
+    @action(methods=['post'],
+            detail=False,
+            url_path='complete/')
+    def complete(self, request, *args, **kwargs):
+        """
+        Принять uid64, password, token -> установить новый пароль пользователю (Протестированно)
+        """
+        self.partial_update(request, *args, **kwargs)
         return Response({'success': 'We have sent you a link to reset your password'},
                         status=status.HTTP_200_OK)
 
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
 
-class PasswordTokenCheckAPI(generics.GenericAPIView):
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
 
-    serializer_class = SetNewPasswordSerializer
+        uid64 = request.data.get('uid64')
+        user_id = force_str(urlsafe_base64_decode(uid64))
+        instance = User.objects.get(id=user_id)
 
-    def get(self, request, uidb64, token):
-
-        try:
-            id = smart_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(id=id)
-
-            if not PasswordResetTokenGenerator().check_token(user, token):
-                return Response({'error': 'Token is not valid, please request a new one'},
-                                status=status.HTTP_401_UNAUTHORIZED)
-
-            return Response({
-                'success': True,
-                'message': 'Credentials Valid',
-                'uidb64': uidb64,
-                'token': token,
-            }, status=status.HTTP_200_OK)
-
-        except DjangoUnicodeDecodeError:
-            if not PasswordResetTokenGenerator().check_token(user, token):
-                return Response({'error': 'Token is not valid, please request a new one'},
-                                status=status.HTTP_401_UNAUTHORIZED)
-
-
-class SetNewPasswordAPIView(generics.GenericAPIView):
-
-    serializer_class = SetNewPasswordSerializer
-
-    def patch(self, request):
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-        return Response({
-            'success': True,
-            'message': 'Password reset success',
-        }, status=status.HTTP_200_OK)
+        return Response({'success': 'We have sent you a link to reset your password'},
+                        status=status.HTTP_200_OK)

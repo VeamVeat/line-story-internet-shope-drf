@@ -19,17 +19,6 @@ class ProfileView(RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
     permission_classes = (IsAuthenticated,)
 
-    # def update(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     instance.phone = request.data.get("phone")
-    #     instance.region = request.data.get("region")
-    #     instance.save()
-    #
-    #     serializer = self.get_serializer(data=instance)
-    #     serializer.is_valid(raise_exception=True)
-    #     self.perform_update(serializer)
-    #     return Response(serializer.data)
-
     def update(self, request, *args, **kwargs):
         image_data = request.FILES.get("image")
         phone = kwargs.get("phone", request.user.profile.phone)
@@ -59,7 +48,10 @@ class BlockingUserView(mixins.UpdateModelMixin,
     }
 
     def get_serializer(self, *args, **kwargs):
-        user_email = args[0]
+        try:
+            user_email = args[0]
+        except IndexError:
+            user_email = ''
 
         serializer_class = self.get_serializer_class()
         kwargs['context'] = self.get_serializer_context()

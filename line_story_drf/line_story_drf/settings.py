@@ -235,4 +235,19 @@ else:
     EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
     EMAIL_USE_TLS = bool(int(os.getenv("EMAIL_USE_TLS")))
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "asgi_redis.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [('localhost', 6379)],
+        },
+        "ROUTING": "multichat.routing.channel_routing",
+    },
+}
+
+REDIS_HOST = '0.0.0.0'
+REDIS_PORT = '6379'
+
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+
 LOGGING = logging()

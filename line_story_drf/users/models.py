@@ -30,6 +30,7 @@ class User(AbstractUser):
         verbose_name = _('user')
         verbose_name_plural = _('users')
 
+    @property
     def tokens(self):
         refresh = RefreshToken.for_user(self)
 

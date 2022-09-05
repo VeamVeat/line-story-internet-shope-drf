@@ -41,7 +41,7 @@ class CartViewSet(mixins.CreateModelMixin,
 
         serializer_class = self.get_serializer_class()
         kwargs['context'] = self.get_serializer_context()
-        user = kwargs['context'].request.user
+        user = kwargs['context']['request'].user
 
         cart_item_services = CartItemService(
                              user=user,
@@ -70,7 +70,7 @@ class CartViewSet(mixins.CreateModelMixin,
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['patch'],
-            detail=True,
+            detail=False,
             url_path='diminish_product/')
     def diminish_product(self, request, *args, **kwargs):
         product_id = request.data.get('product_id')
@@ -92,7 +92,7 @@ class CartViewSet(mixins.CreateModelMixin,
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['patch'],
-            detail=True,
+            detail=False,
             url_path='increase_product/')
     def increase_product(self, request, *args, **kwargs):
         product_id = request.data.get('product_id')
@@ -132,7 +132,7 @@ class ReservationViewSet(mixins.CreateModelMixin,
 
         serializer_class = self.get_serializer_class()
         kwargs['context'] = self.get_serializer_context()
-        user = kwargs['context'].request.user
+        user = kwargs['context']['request'].user
 
         reservation_services = ReservationService(
                                user=user,
