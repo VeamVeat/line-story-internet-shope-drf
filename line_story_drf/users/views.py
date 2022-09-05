@@ -15,7 +15,7 @@ from utils.mixins.viewset_mixins import ViewSetMixin
 User = auth.get_user_model()
 
 
-class ProfileView(mixins.UpdateModelMixin,
+class ProfileViewSet(mixins.UpdateModelMixin,
                   mixins.RetrieveModelMixin,
                   ViewSetMixin,
                   GenericViewSet):
