@@ -4,7 +4,6 @@ from products.models import Product
 
 
 class ProductAdminForm(forms.ModelForm):
-
     image = forms.ImageField(widget=forms.FileInput, max_length=255)
 
     def __init__(self, *args, **kwargs):

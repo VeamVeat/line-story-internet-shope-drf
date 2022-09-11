@@ -1,97 +1,77 @@
 from django.shortcuts import redirect
 from django.contrib import auth
 from rest_framework import mixins, permissions
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
+from line_story_drf.permissions import IsBlockedPermissions
 from users.models import Profile
+from users.permissions import IsNotCurrentUserPermissions
 from users.serializers import (
     ProfileDetailSerializer,
     BlockingUserSerializer,
     ProfileUpdateSerializer)
 from users.services import UserService
-from utils.mixins.viewset_mixins import ViewSetMixin
+from utils.mixins import viewset_mixins
 
 User = auth.get_user_model()
 
 
 class ProfileViewSet(mixins.UpdateModelMixin,
-                  mixins.RetrieveModelMixin,
-                  ViewSetMixin,
-                  GenericViewSet):
-
+                     mixins.RetrieveModelMixin,
+                     viewset_mixins.MyViewSetMixin,
+                     GenericViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileUpdateSerializer
     lookup_field = 'pk'
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsBlockedPermissions)
 
     serializer_class_by_action = {
         'partial_update': ProfileUpdateSerializer,
         'retrieve': ProfileDetailSerializer
     }
 
-    def get_serializer(self, *args, **kwargs):
-
-        serializer_class = self.get_serializer_class()
-        kwargs['context'] = self.get_serializer_context()
-        initial_data = dict()
-
-        if self.action == 'partial_update':
-            initial_data = {
-                'age': kwargs.get('data').get('phone'),
-                'phone': kwargs.get('data').get('phone'),
-                'region': kwargs.get('data').get('region'),
-                'image': kwargs.get('data').get('image'),
-                'request': kwargs.get('context').get('request')
-            }
-
-        user_service = UserService(**initial_data)
-        user_service_kwargs = {
-            'user_service': user_service
+    @staticmethod
+    def service_class(user=None):
+        return {
+            'user_service': UserService()
         }
-        kwargs['context'].update(user_service_kwargs)
-        return serializer_class(*args, **kwargs)
 
 
 class BlockingUserView(mixins.UpdateModelMixin,
-                       ViewSetMixin,
+                       viewset_mixins.MyViewSetMixin,
                        GenericViewSet):
-
     queryset = User.objects.all()
     serializer_class = BlockingUserSerializer
-    lookup_field = 'user_id'
-    permission_classes = (permissions.IsAuthenticated,)
+    lookup_field = 'id'
+    permission_classes = None
 
     serializer_class_by_action = {
-        'partial_update': BlockingUserSerializer,
+        'update': BlockingUserSerializer,
     }
 
-    def get_serializer(self, *args, **kwargs):
-        try:
-            user_email = args[0]
-        except IndexError:
-            user_email = ''
-
-        serializer_class = self.get_serializer_class()
-        kwargs['context'] = self.get_serializer_context()
-
-        user_service = UserService(email=user_email)
-        user_service_kwargs = {
-            'user_service': user_service
+    @staticmethod
+    def service_class(user=None):
+        return {
+            'user_service': UserService()
         }
-        kwargs['context'].update(user_service_kwargs)
-        return serializer_class(*args, **kwargs)
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            self.permission_classes = [IsNotCurrentUserPermissions, permissions.IsAdminUser]
+        else:
+            self.permission_classes = [permissions.IsAdminUser, permissions.IsAuthenticated]
+
+        return super(BlockingUserView, self).get_permissions()
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
-        user_id = kwargs.get('user_id')
-
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        user = get_object_or_404(User, pk=kwargs.get('id'))
+        serializer = self.get_serializer(user, data=kwargs, partial=partial)
         serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+        serializer.save()
 
-        if getattr(instance, '_prefetched_objects_cache', None):
-            instance._prefetched_objects_cache = {}
+        user_id = serializer.data.get('id')
 
         return redirect('admin:users_user_change', object_id=user_id)

@@ -1,8 +1,8 @@
+from django.http import Http404
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 
 from orders.models import CartItem, Reservation, Order
-from orders.services import CartItemService, OrderService
 from products.models import Product
 from products.serializers import ProductSerializer
 from users.serializers import UserSerializer
@@ -11,15 +11,15 @@ from users.serializers import UserSerializer
 class AddToCartSerializer(serializers.ModelSerializer):
     product_id = serializers.IntegerField(required=True)
 
-    class Meta:
-        model = CartItem
-        fields = ['product_id']
-
     def create(self, validated_data):
         cart_item_service = self.context['cart_item_service']
         cart_item = cart_item_service.add_product()
 
         return cart_item
+
+    class Meta:
+        model = CartItem
+        fields = ['product_id']
 
 
 class ProductsAllCartSerializer(serializers.ModelSerializer):
@@ -33,6 +33,18 @@ class ProductsAllCartSerializer(serializers.ModelSerializer):
 
 class ChangeOfProductCartSerializer(serializers.ModelSerializer):
     product_id = serializers.IntegerField(required=True)
+
+    def validate(self, attrs):
+        product_id = attrs.get('product_id')
+
+        is_product_exist = CartItem.objects.filter(
+            user=self.context.get('request').user,
+            product_id=product_id
+        ).exist()
+
+        if not is_product_exist:
+            raise Http404("this product is not in the cart")
+        return attrs
 
     class Meta:
         model = CartItem
@@ -51,10 +63,6 @@ class ReservedProductSerializer(serializers.ModelSerializer):
     count_product = serializers.IntegerField(required=True)
     product_id = serializers.IntegerField(required=True)
 
-    class Meta:
-        model = Reservation
-        fields = ['product_id', 'count_product']
-
     def validate(self, attrs):
         product_id = attrs.get('product_id')
         count_product = attrs.get('count_product')
@@ -67,9 +75,17 @@ class ReservedProductSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        reservation_services = self.context['reservation_services']
-        instance = reservation_services.make_reservation()
+        product_id = validated_data.get('product_id')
+        count_product = validated_data.get('count_product')
+
+        reservation_service = self.context['reservation_service']
+
+        instance = reservation_service.make_reservation(product_id, count_product)
         return instance
+
+    class Meta:
+        model = Reservation
+        fields = ['product_id', 'count_product']
 
 
 class ReservedAllProductSerializer(serializers.ModelSerializer):
@@ -88,15 +104,11 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     count_product = serializers.IntegerField(required=True)
     address = serializers.CharField(min_length=3)
 
-    class Meta:
-        model = Reservation
-        fields = ['address', 'count_product']
-
     def validate(self, attrs):
         user = self.context['request'].user
 
-        cart_item_services = CartItemService(user=user, model=CartItem)
-        is_user_money = cart_item_services.check_money_for_make_order()
+        cart_item_service = self.context['cart_item_service']
+        is_user_money = cart_item_service.check_money_for_make_order(user)
 
         if not is_user_money:
             raise serializers.ValidationError(
@@ -105,23 +117,28 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-
         address = validated_data('address')
+
         user = self.context['request'].user
+        cart_item_service = self.context['cart_item_service']
+        order_service = self.context['order_service']
 
-        cart_item_services = CartItemService(user=user, model=CartItem)
-        order_services = OrderService(user=user, model=Reservation)
+        cart_item_current_user = cart_item_service.get_all_cart_item(user)
+        product_all = cart_item_service.get_products_list(cart_item_current_user)
+        total_count = cart_item_service.get_total_product_count(cart_item_current_user)
+        total_price = cart_item_service.get_total_price(user)
 
-        product_all = cart_item_services.get_products_list()
-        total_count = cart_item_services.get_total_product_count()
-        total_price = cart_item_services.get_total_price()
-
-        instance = order_services.order_create(
-                                  total_price,
-                                  total_count,
-                                  product_all,
-                                  address
+        instance = order_service.order_create(
+          user,
+          total_price,
+          total_count,
+          product_all,
+          address
         )
-        cart_item_services.clear()
+        cart_item_service.clear(user)
 
         return instance
+
+    class Meta:
+        model = Reservation
+        fields = ['address', 'count_product']

@@ -10,7 +10,6 @@ class TypeSerializer(serializers.ModelSerializer):
 
 
 class FileSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = File
         exclude = ('id',)
@@ -26,7 +25,6 @@ class ProductFileSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     type = TypeSerializer(read_only=True)
-
     product_file = ProductFileSerializer(many=True, read_only=True)
 
     class Meta:

@@ -1,5 +1,5 @@
-from django.urls import include
 import pprint
+from django.urls import include
 from django.urls import path
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -19,11 +19,11 @@ password_reset_router.register(r'password-reset', PasswordResetViewSet, basename
 pprint.pprint(password_reset_router.get_urls())
 
 urlpatterns = [
-    path('login/', LoginViewSet.as_view({'post': 'create'}), name='login'),
+    path('login/', LoginViewSet.as_view(), name='login'),
     path('logout/', LogoutViewSet.as_view({'post': 'update'}), name='logout'),
 
     path('register/', RegisterUserViewSet.as_view({'post': 'create'}), name='register'),
-    path('email-verify/', VerifyEmailViewSet.as_view({'patch': 'partial_update'}), name='email-verify'),
+    path('email-verify/', VerifyEmailViewSet.as_view(), name='email-verify'),
 
     path('', include(password_reset_router.urls)),
 

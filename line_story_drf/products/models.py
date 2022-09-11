@@ -10,15 +10,14 @@ from utils.mixins.model_mixins import CreatedAtMixin
 
 
 class ProductType(models.Model):
-
     name = models.CharField(max_length=255, verbose_name=_('name of product'))
+
+    def __str__(self):
+        return self.name
 
     class Meta:
         verbose_name = _('type of product')
         verbose_name_plural = _('type of products')
-
-    def __str__(self):
-        return self.name
 
 
 def get_path_file(instance, filename):
@@ -39,10 +38,6 @@ class File(models.Model):
     size = models.IntegerField(default=0, verbose_name=_('size of file'))
     name = models.CharField(max_length=255, verbose_name=_('name of file'))
 
-    class Meta:
-        verbose_name = _('file')
-        verbose_name_plural = _('files')
-
     def save(self, *args, **kwargs):
         self.size = self.image.size
         self.name, self.type = self.image.name.split('.')
@@ -55,22 +50,25 @@ class File(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = _('file')
+        verbose_name_plural = _('files')
+
 
 class Product(CreatedAtMixin):
     type = models.ForeignKey(ProductType, null=True, on_delete=models.SET_NULL, related_name='product')
     slug = models.SlugField(null=False, unique=True)
     title = models.CharField(max_length=255, verbose_name=_('name of product'))
     description = models.TextField(verbose_name=_('name of description'))
-    price = models.DecimalField(max_digits=10, decimal_places=2,
-                                validators=[MinValueValidator(Decimal('0.01'))], verbose_name=_('price of product'))
+    price = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        verbose_name=_('price of product')
+    )
     year = models.IntegerField(db_index=True, verbose_name=_('year of product release'))
     quantity = models.PositiveIntegerField(default=1, verbose_name=_('number of products'))
 
     objects = ProductManager()
-
-    class Meta:
-        verbose_name = _('product')
-        verbose_name_plural = _('products')
 
     def __str__(self):
         return self.title
@@ -97,7 +95,10 @@ class Product(CreatedAtMixin):
     def is_stock(self) -> bool:
         return True if self.quantity > 0 else False
 
+    class Meta:
+        verbose_name = _('product')
+        verbose_name_plural = _('products')
+
 
 class ProductFile(File):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_file')
-

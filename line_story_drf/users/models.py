@@ -49,20 +49,21 @@ class User(AbstractUser):
 
 
 class Profile(models.Model):
-    phone_regex = RegexValidator(regex=r'^\+?1?\d{9,15}$',
-                                 message=_('phone number must not'
-                                           ' consist of space and '
-                                           'requires country code.'
-                                           ' eg : +79546748973'))
+    phone_regex = RegexValidator(
+        regex=r'^\+?1?\d{9,15}$',
+        message=_('phone number must not consist of space and requires country code.eg : +79546748973'))
 
     phone = models.CharField(validators=[phone_regex], max_length=50, verbose_name=_('phone'))
     region = models.CharField(max_length=255, verbose_name=_('region of residence'))
-    user = models.OneToOneField(User,
-                                on_delete=models.CASCADE,
-                                null=False,
-                                unique=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=False, unique=True)
 
-    image = models.OneToOneField(File, null=True, blank=True, on_delete=models.SET_NULL, verbose_name=_('profile photo'))
+    image = models.OneToOneField(
+        File,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        verbose_name=_('profile photo')
+    )
 
     def __str__(self):
         return f'{self.user}'
@@ -77,7 +78,7 @@ class Profile(models.Model):
 
     @property
     def balance_user(self):
-        return self.user.wallet.ballance
+        return self.user.wallet.balance
 
 
 class Transaction(models.Model):
@@ -91,28 +92,36 @@ class Transaction(models.Model):
 
 
 class Wallet(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE,
-                                related_name='wallet', verbose_name=_('user`s wallet'))
-    ballance = models.PositiveIntegerField(verbose_name=_('user balance'), default=0)
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='wallet',
+        verbose_name=_('user`s wallet')
+    )
+    balance = models.PositiveIntegerField(verbose_name=_('user balance'), default=0)
+
+    @transaction.atomic
+    def increase_balance(self, value):
+        Transaction.objects.create(
+            user=self.user,
+            descriptions=f"пополнение счёта на самму {value} от пользователя {self.user.email}",
+            amount=value
+        )
+        self.balance += value
+
+    @transaction.atomic
+    def diminish_balance(self, value):
+        Transaction.objects.create(
+            user=self,
+            descriptions=f"списание счёта на самму {value} от пользователя {self.email}",
+            amount=value
+        )
+        self.balance -= value
+
+    def __str__(self):
+        return f'{self.balance}'
 
     class Meta:
         unique_together = (("user", "id"),)
         permissions = (("can_add_money", "top up balance"),)
 
-    @transaction.atomic
-    def increase_balance(self, value):
-        Transaction.objects.create(user=self.user,
-                                   descriptions=f"пополнение счёта на самму {value} от пользователя {self.user.email}",
-                                   amount=value)
-        self.ballance += value
-
-    @transaction.atomic
-    def diminish_balance(self, value):
-        Transaction.objects.create(user=self,
-                                   descriptions=f"списание счёта на самму {value} от пользователя {self.email}",
-                                   amount=value)
-
-        self.ballance -= value
-
-    def __str__(self):
-        return f'{self.ballance}'

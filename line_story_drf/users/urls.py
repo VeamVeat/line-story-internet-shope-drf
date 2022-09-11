@@ -15,12 +15,12 @@ Including another URLconf
 """
 
 from django.urls import path
-from users import views
+
 from users.views import ProfileViewSet
 
 app_name = 'users'
 
 urlpatterns = [
     path('profile/<int:pk>', ProfileViewSet.as_view({'patch': 'partial_update',
-                                                    'get': 'retrieve'}), name='profile_detail'),
+                                                     'get': 'retrieve'}), name='profile_detail'),
 ]

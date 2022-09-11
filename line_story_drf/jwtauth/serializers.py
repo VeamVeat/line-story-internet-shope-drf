@@ -1,42 +1,38 @@
 from django.contrib import auth
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ValidationError
-from django.utils.encoding import force_str
-from django.utils.http import urlsafe_base64_decode
+from django.http import Http404
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from users.services import UserService
+from utils.uid64.services import Uid64Service
 
 User = auth.get_user_model()
 
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
-                           write_only=True,
-                           required=True,
-                           style={'input_type': 'password'}
+        write_only=True,
+        required=True,
+        style={'input_type': 'password'}
     )
     password2 = serializers.CharField(
-                            style={'input_type': 'password'},
-                            write_only=True,
-                            label=_('Confirm password')
+        style={'input_type': 'password'},
+        write_only=True,
+        label=_('Confirm password')
     )
     birthday = serializers.DateField(
-                           required=True,
-                           style={'input_type': 'date'}
+        required=True,
+        style={'input_type': 'date'}
     )
-
-    class Meta:
-        model = User
-        fields = ['email', 'password', 'password2', 'birthday']
-        extra_kwargs = {'password': {'write_only': True}}
 
     def validate_email(self, value):
         email = value
@@ -67,37 +63,25 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        user_service = UserService(
-            request=self.context.get('request'),
-            email=validated_data.get('email'),
-            password=validated_data.get('password'),
-            birthday=validated_data.get('birthday')
-        )
-        user = user_service.register_user()
+        register_data = {
+            'domain': get_current_site(request=self.context.get('request')).domain,
+            'email': validated_data.get('email'),
+            'password': validated_data.get('password'),
+            'birthday': validated_data.get('birthday')
+        }
+        user_service = self.context.get('user_service')
+        user = user_service.register_user(**register_data)
         return user
-
-
-class EmailVerificationSerializer(serializers.ModelSerializer):
-    token = serializers.CharField(max_length=555)
 
     class Meta:
         model = User
-        fields = ['token']
-
-    def update(self, instance, validated_data):
-        token = validated_data.get('token')
-        user_service = UserService(token=token)
-        instance = user_service.confirm_registration()
-        return instance
+        fields = ['email', 'password', 'password2', 'birthday']
+        extra_kwargs = {'password': {'write_only': True}}
 
 
 class LoginSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=255, min_length=3)
-    password = serializers.CharField(max_length=68, min_length=4, write_only=True)
-
-    class Meta:
-        model = User
-        fields = ['email', 'password']
+    password = serializers.CharField(max_length=68, min_length=4)
 
     def validate(self, attrs):
         email = attrs.get('email', '')
@@ -113,65 +97,50 @@ class LoginSerializer(serializers.ModelSerializer):
             raise AuthenticationFailed('Account disabled, contact admin')
         return attrs
 
-    def create(self, validated_data):
-        email = validated_data.get('email')
-        password = validated_data.get('password')
-        user = auth.authenticate(email=email, password=password)
-        return user
+    class Meta:
+        model = User
+        fields = ['email', 'password']
 
 
 class LogoutSerializer(serializers.ModelSerializer):
-
     token = serializers.CharField(min_length=6)
+
+    def save(self, **kwargs):
+        try:
+            token = kwargs.get('token')
+            RefreshToken(token).blacklist()
+        except TokenError:
+            self.fail('bad token')
 
     class Meta:
         model = BlacklistedToken
         fields = ['token']
 
-    def __init__(self, instance=None, data=None, **kwargs):
-        super().__init__(instance, data, **kwargs)
-        self.token = None
-        self.default_error_messages = {
-            'bad_token': ('Token is expired or invalid',)
-        }
-
-    def validate(self, attrs):
-        self.token = attrs.get('refresh')
-        return attrs
-
-    def save(self, **kwargs):
-        try:
-            RefreshToken(self.token).blacklist()
-        except TokenError:
-            self.fail('bad_token')
-
 
 class TokenObtainMySerializer(TokenObtainPairSerializer):
-
     def validate(self, attrs):
         email = attrs.get(self.username_field)
 
-        user = User.objects.get(email=email)
-        is_blocked = user.is_blocked
-
-        if is_blocked:
+        user = get_object_or_404(User, email=email)
+        if user.is_blocked:
             raise AuthenticationFailed('Your account is blocked')
 
-        data = super().validate(attrs)
-        return data
+        return super().validate(attrs)
 
 
-class ResetPasswordEmailSerializer(serializers.ModelSerializer):
-
+class ResetPasswordEmailSerializer(serializers.Serializer):
     email = serializers.EmailField(min_length=2)
 
-    class Meta:
-        model = User
-        fields = ['email']
+    def validate(self, attrs):
+        email = attrs.get('email')
+        is_user_exist = User.objects.filter(email=email).exists()
+
+        if not is_user_exist:
+            raise Http404('User not exists')
+        return attrs
 
 
 class SetNewPasswordSerializer(serializers.ModelSerializer):
-
     password = serializers.CharField(max_length=68, min_length=6, write_only=True)
     token = serializers.CharField(max_length=68, min_length=1, write_only=True)
     uid64 = serializers.CharField(max_length=68, min_length=1, write_only=True)
@@ -181,15 +150,11 @@ class SetNewPasswordSerializer(serializers.ModelSerializer):
         fields = ['password', 'token', 'uid64']
 
     def validate(self, attrs):
-        '''
-        Протестированно
-        '''
         try:
             token = attrs.get('token')
-            uidb64 = attrs.get('uid64')
+            uid64 = attrs.get('uid64')
 
-            id = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(id=id)
+            user = Uid64Service.get_user_by_uid64(uid64)
 
             if not PasswordResetTokenGenerator().check_token(user, token):
                 raise AuthenticationFailed('The reset link is isvalid', 401)
@@ -199,7 +164,10 @@ class SetNewPasswordSerializer(serializers.ModelSerializer):
         return attrs
 
     def update(self, instance, validated_data):
+        password = validated_data.get('password')
+
         user_service = self.context['user_service']
-        request = self.context['request']
-        instance = user_service.set_password(request)
+        user = self.context.get('request').user
+
+        instance = user_service.set_password(user, password)
         return instance

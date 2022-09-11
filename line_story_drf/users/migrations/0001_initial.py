@@ -63,7 +63,7 @@ class Migration(migrations.Migration):
             name='Wallet',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('ballance', models.PositiveIntegerField(default=0, verbose_name='user balance')),
+                ('balance', models.PositiveIntegerField(default=0, verbose_name='user balance')),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='wallet', to=settings.AUTH_USER_MODEL, verbose_name='user`s wallet')),
             ],
             options={

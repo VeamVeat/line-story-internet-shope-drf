@@ -7,5 +7,5 @@ class ProfileAdminForm(forms.ModelForm):
     picture = forms.ImageField(widget=forms.FileInput, max_length=255, required=False)
 
     class Meta:
-        fields = '__all__'
         model = Profile
+        fields = '__all__'

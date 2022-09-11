@@ -14,8 +14,8 @@ class ProductAPIView(ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     filter_backends = (rest_filters.DjangoFilterBackend, filters.SearchFilter)
-    filterset_class = ProductFilter
     search_fields = ['type__name', 'title']
+    filterset_class = ProductFilter
     ordering_fields = ('title', '-year')
     ordering = ('-year',)
 

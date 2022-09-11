@@ -22,18 +22,22 @@ class UserAdmin(admin.ModelAdmin):
     def change_view(self, request, object_id, form_url="", extra_context=None):
         if extra_context is None:
             user = User.objects.get(pk=object_id)
-            extra_context = {'user_id': object_id,
-                             'user_image_url': user.profile.image.image.url}
+            extra_context = {
+                'user_id': object_id,
+                'user_image_url': user.profile.image.image.url
+            }
 
-        return super(UserAdmin, self).change_view(request,
-                                                  object_id=object_id,
-                                                  form_url=form_url,
-                                                  extra_context=extra_context)
+        return super(UserAdmin, self).change_view(
+            request,
+            object_id=object_id,
+            form_url=form_url,
+            extra_context=extra_context
+        )
 
     def get_urls(self):
         urls = super().get_urls()
         my_urls = [
-            path('<user_id>',
+            path('<id>',
                  self.admin_site.admin_view(BlockingUserView.as_view({'post': 'partial_update'})),
                  name='blocked_user'),
         ]
@@ -67,7 +71,6 @@ class ProfileAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if form.cleaned_data['picture'] and request.user.is_superuser:
             file = form.cleaned_data['picture']
-            profile_image = File.objects.get(id=obj.image.id)
-            profile_image.image = file
-            profile_image.save()
+            obj.image.image = file
+            obj.image.save()
         return super(ProfileAdmin, self).save_model(request, obj, form, change)

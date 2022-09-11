@@ -13,9 +13,9 @@ import os
 from pathlib import Path
 from datetime import timedelta
 
-from logger.logging import logging
-
 from dotenv import load_dotenv
+
+from logger.logging import logging
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -237,6 +237,7 @@ else:
 
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = os.getenv("REDIS_PORT", "8080")
+REDIS_DB = os.getenv("REDIS_DB")
 
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
