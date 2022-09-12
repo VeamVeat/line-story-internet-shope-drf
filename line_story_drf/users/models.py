@@ -26,10 +26,6 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
-    class Meta:
-        verbose_name = _('user')
-        verbose_name_plural = _('users')
-
     @property
     def tokens(self):
         refresh = RefreshToken.for_user(self)
@@ -46,6 +42,10 @@ class User(AbstractUser):
     )
     def full_name(self):
         return self.first_name + ' ' + self.last_name
+
+    class Meta:
+        verbose_name = _('user')
+        verbose_name_plural = _('users')
 
 
 class Profile(models.Model):
@@ -95,7 +95,6 @@ class Wallet(models.Model):
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
-        related_name='wallet',
         verbose_name=_('user`s wallet')
     )
     balance = models.PositiveIntegerField(verbose_name=_('user balance'), default=0)
@@ -124,4 +123,3 @@ class Wallet(models.Model):
     class Meta:
         unique_together = (("user", "id"),)
         permissions = (("can_add_money", "top up balance"),)
-

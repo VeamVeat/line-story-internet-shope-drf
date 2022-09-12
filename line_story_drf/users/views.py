@@ -11,7 +11,8 @@ from users.permissions import IsNotCurrentUserPermissions
 from users.serializers import (
     ProfileDetailSerializer,
     BlockingUserSerializer,
-    ProfileUpdateSerializer)
+    ProfileUpdateSerializer
+)
 from users.services import UserService
 from utils.mixins import viewset_mixins
 

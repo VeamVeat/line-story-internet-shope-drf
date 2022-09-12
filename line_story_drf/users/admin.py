@@ -4,7 +4,7 @@ from django.utils.safestring import mark_safe
 
 from products.models import File
 from users.forms import ProfileAdminForm
-from users.models import User, Profile
+from users.models import User, Profile, Wallet
 from users.views import BlockingUserView
 
 
@@ -46,7 +46,7 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user',  'age', 'phone', 'image', 'region', 'balance_user')
+    list_display = ('id', 'user',  'age', 'phone', 'image', 'region')
     readonly_fields = ('balance_user', 'file_image', 'age')
     form = ProfileAdminForm
 
@@ -74,3 +74,4 @@ class ProfileAdmin(admin.ModelAdmin):
             obj.image.image = file
             obj.image.save()
         return super(ProfileAdmin, self).save_model(request, obj, form, change)
+
