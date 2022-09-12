@@ -1,6 +1,6 @@
 from django.db import migrations
 
-from countries.json_countries import countries
+from utils.list_countries import countries
 
 
 def forwards_add_counries(apps, schema_editor):
