@@ -10,6 +10,12 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ("email", "first_name", "last_name")
 
 
+class UserBirthdaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("birthday",)
+
+
 class ImageProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
@@ -20,15 +26,17 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
     phone = serializers.CharField(min_length=10)
     region = serializers.CharField(min_length=5)
     image = ImageProfileSerializer(read_only=True)
-    age = serializers.IntegerField(min_value=5, max_value=120)
+    user = UserBirthdaySerializer()
 
     def update(self, instance, validated_data):
 
+        request_user = self.context.get('request').user
+
         data_update_profile = {
-            'phone': validated_data.get('phone'),
-            'region': validated_data.get('region'),
-            'image': validated_data.get('image'),
-            'age': validated_data.get('age'),
+            'phone': validated_data.get('phone', request_user.profile.phone),
+            'region': validated_data.get('region', request_user.profile.region),
+            'image': validated_data.get('image', request_user.profile.image.image),
+            'birthday': validated_data.get('birthday', request_user.birthday),
             'user': self.context.get('request').user
         }
 
@@ -39,7 +47,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('phone', 'region', 'image', 'age')
+        fields = ('phone', 'region', 'image', 'user', 'user')
 
 
 class ProfileDetailSerializer(serializers.ModelSerializer):

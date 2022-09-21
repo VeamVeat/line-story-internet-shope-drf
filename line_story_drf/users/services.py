@@ -26,14 +26,16 @@ class UserService:
         return user
 
     @staticmethod
-    def update_profile(user, image, phone, region, age):
+    def update_profile(user, image, phone, region, birthday):
         user.profile.image.image = image
         user.profile.image.save()
 
         user.profile.phone = phone
         user.profile.region = region
-        user.profile.age = age
         user.profile.save()
+
+        user.birthday = birthday
+        user.save()
         return user.profile
 
     @staticmethod
@@ -53,14 +55,14 @@ class UserService:
 
         connect_redis = RedisService()
         connect_redis.set(rand_token, user.pk)
-        relative_link = reverse('email-verify')
 
-        absolute_url = f'{settings.HTTP_SEND_EMAI}://{domain}/{relative_link}?token={rand_token}'
+        relative_link = reverse('jwtauth:email_verify')
+        absolute_url = f'{settings.HTTP_SEND_EMAIL}://{domain}/{relative_link}?token={rand_token}'
         email_body = f'Hi{user.email} user the link below to verify your email \n {absolute_url}'
 
         data = {
             'body': email_body,
-            'to': user.email,
+            'to': (user.email,),
             'subject': 'Verify your email'
         }
 
@@ -89,11 +91,8 @@ class UserService:
 
         return user
 
-    def confirm_registration(self, token):
+    def confirm_registration(self, user, token):
         redis_service = RedisService()
-        user_id = redis_service.get(token)
-
-        user = get_object_or_404(self.__model, pk=user_id)
         user.is_active = True
 
         result = redis_service.delete(token)
@@ -103,19 +102,25 @@ class UserService:
 
         return user
 
-    def send_email_to_password_reset(self, email, domain):
+    def send_email_to_password_reset_confirm(self, email, domain):
         user = get_object_or_404(self.__model, email=email)
         uid64 = Uid64Service.get_uid64_by_user_id(user.id)
         token = PasswordResetTokenGenerator().make_token(user)
 
-        relative_link = f'password-reset-confirm/{uid64}/{token}/'
+        relative_link = reverse(
+            "jwtauth:password-reset-confirm",
+            kwargs={
+                'uid64': uid64,
+                'token': token
+            }
+        )
 
-        absolute_url = f'{settings.HTTP_SEND_EMAI}://{domain}/{relative_link}'
-        email_body = f'Hello {user.email}, \n user the link below to reset your password \n + {absolute_url}'
+        absolute_url = f'{settings.HTTP_SEND_EMAIL}://{domain}/{relative_link}'
+        email_body = f'Hello {user.email}, \n user the link below to reset your password \n {absolute_url}'
 
         data = {
             'body': email_body,
-            'to': user.email,
+            'to': (user.email, ),
             'subject': 'Reset password'
         }
 

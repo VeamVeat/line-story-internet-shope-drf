@@ -22,6 +22,6 @@ app_name = 'products'
 
 
 urlpatterns = [
-    path('all/', ProductAPIView.as_view()),
+    path('all/', ProductAPIView.as_view(), name='product-all'),
     re_path(r'(?P<product_id>[0-9]+)/$', ProductDetailAPIView.as_view(), name='product-detail'),
 ]

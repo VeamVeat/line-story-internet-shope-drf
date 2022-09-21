@@ -9,8 +9,11 @@ def forwards_add_counries(apps, schema_editor):
     objects_country = []
 
     for dict_country in countries:
-        values = list(dict_country.values())
-        objects_country.append(Country(name=values[0], reduction=values[1]))
+        name = dict_country.get('text')
+        reduction = dict_country.get('value')
+
+        objects_country.append(Country(name=name, reduction=reduction))
+
     Country.objects.bulk_create(objects_country)
 
 

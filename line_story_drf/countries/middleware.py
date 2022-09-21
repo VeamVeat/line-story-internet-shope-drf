@@ -12,31 +12,34 @@ class CheckCountryByIpMiddleware:
         self.__logger = logging.getLogger(__name__)
 
     @staticmethod
-    def get_ip_by_request(request):
+    def __get_ip_by_request(request):
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
             ip = x_forwarded_for.split(',')[-1].strip()
+        elif request.META.get('HTTP_X_REAL_IP'):
+            ip = request.META.get('HTTP_X_REAL_IP')
         else:
             ip = request.META.get('REMOTE_ADDR')
-        return ip
+        return str(ip)
 
     @staticmethod
-    def is_black_list_country(country_name):
+    def __is_black_list_country(country_name):
         return BlacklistedCountry.objects.filter(county__reduction=country_name).exists()
 
     def __call__(self, request):
-        user_ip = str(self.get_ip_by_request(request))
+        user_ip = self.__get_ip_by_request(request)
         ip_info = geolite2.lookup(user_ip)
 
         if ip_info is None:
-            request.META['USER_COUNTRY'] = 'None'
+            request.META['USER_COUNTRY'] = None
             self.__logger.info('Country not recognized')
             return self.__get_response(request)
 
         country = ip_info.country
-        request.META['USER_COUNTRY'] = country
 
-        if self.is_black_list_country(country):
+        if self.__is_black_list_country(country):
             return HttpResponseForbidden("This country is blocked by the administrator")
+
+        request.META['USER_COUNTRY'] = country
 
         return self.__get_response(request)

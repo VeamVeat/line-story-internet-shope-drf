@@ -12,21 +12,24 @@ class RedisService:
         }
 
     def get(self, key, val_type='int'):
-        value = self.__connect_redis.get(key)
+        value_type = self.__type_dict.get('str')
+        value = self.__connect_redis.get(value_type(key))
 
         if value is None:
             return None
 
-        value_type = self.__type_dict.get(val_type)
         return value_type(value)
 
     def set(self, key, value, val_type='str'):
         value_type = self.__type_dict.get(val_type)
-        self.__connect_redis.set(value_type(key), value_type(value))
+        s = value_type(key)
+        self.__connect_redis.set(s, value_type(value))
 
-    def delete(self, key):
+    def delete(self, key, val_type='str'):
         """
+        :param val_type:
         :param key: key
         :return: 1 if successful else 0
         """
-        return self.__connect_redis.delete(key)
+        value_type = self.__type_dict.get(val_type)
+        return self.__connect_redis.delete(value_type(key))

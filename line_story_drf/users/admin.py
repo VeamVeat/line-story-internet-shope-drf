@@ -38,8 +38,8 @@ class UserAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         my_urls = [
             path('<id>',
-                 self.admin_site.admin_view(BlockingUserView.as_view({'post': 'partial_update'})),
-                 name='blocked_user'),
+                 self.admin_site.admin_view(BlockingUserView.as_view({'post': 'update'})),
+                 name='blocking_user'),
         ]
         return my_urls + urls
 

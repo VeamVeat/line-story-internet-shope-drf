@@ -13,14 +13,20 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import pprint
 
 from django.urls import path
+from rest_framework import routers
+from django.urls import include
 
 from users.views import ProfileViewSet
 
 app_name = 'users'
+profile_router = routers.DefaultRouter()
+profile_router.register(r'profile', ProfileViewSet, basename='profile')
+
+pprint.pprint(profile_router.get_urls())
 
 urlpatterns = [
-    path('profile/<int:pk>', ProfileViewSet.as_view({'patch': 'partial_update',
-                                                     'get': 'retrieve'}), name='profile_detail'),
+    path('', include(profile_router.urls)),
 ]

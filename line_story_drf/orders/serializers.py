@@ -13,7 +13,8 @@ class AddToCartSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         cart_item_service = self.context['cart_item_service']
-        cart_item = cart_item_service.add_product()
+        user = self.context['request'].user
+        cart_item = cart_item_service.add_product(user, validated_data.get('product_id'))
 
         return cart_item
 
@@ -40,7 +41,7 @@ class ChangeOfProductCartSerializer(serializers.ModelSerializer):
         is_product_exist = CartItem.objects.filter(
             user=self.context.get('request').user,
             product_id=product_id
-        ).exist()
+        ).exists()
 
         if not is_product_exist:
             raise Http404("this product is not in the cart")
@@ -60,15 +61,15 @@ class DeleteProductReservedSerializer(serializers.ModelSerializer):
 
 
 class ReservedProductSerializer(serializers.ModelSerializer):
-    count_product = serializers.IntegerField(required=True)
+    quantity = serializers.IntegerField(required=True)
     product_id = serializers.IntegerField(required=True)
 
     def validate(self, attrs):
         product_id = attrs.get('product_id')
-        count_product = attrs.get('count_product')
+        quantity = attrs.get('quantity')
 
         product = get_object_or_404(Product, id=product_id)
-        if product.quantity >= count_product:
+        if product.quantity <= quantity:
             raise serializers.ValidationError(
                 {"error": "The selected quantity exceeds the quantity in stock"}
             )
@@ -76,16 +77,16 @@ class ReservedProductSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         product_id = validated_data.get('product_id')
-        count_product = validated_data.get('count_product')
+        quantity = validated_data.get('quantity')
 
         reservation_service = self.context['reservation_service']
 
-        instance = reservation_service.make_reservation(product_id, count_product)
+        instance = reservation_service.make_reservation(product_id, quantity)
         return instance
 
     class Meta:
         model = Reservation
-        fields = ['product_id', 'count_product']
+        fields = ['product_id', 'quantity']
 
 
 class ReservedAllProductSerializer(serializers.ModelSerializer):

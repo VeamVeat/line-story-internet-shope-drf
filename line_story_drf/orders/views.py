@@ -35,7 +35,7 @@ class CartViewSet(mixins.CreateModelMixin,
     }
 
     @staticmethod
-    def service_class(user=None):
+    def _get_service_class(user=None):
         return {
             'cart_item_service': CartItemService()
         }
@@ -61,11 +61,10 @@ class CartViewSet(mixins.CreateModelMixin,
     def diminish_product(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
 
         product_id = serializer.data.get('product_id')
 
-        cart_item_service = self.service_class().get('cart_item_service')
+        cart_item_service = self._get_service_class().get('cart_item_service')
         calculate_product_success = cart_item_service.diminish_product(request.user, product_id)
 
         if not calculate_product_success:
@@ -82,11 +81,10 @@ class CartViewSet(mixins.CreateModelMixin,
     def increase_product(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
 
         product_id = serializer.data.get('product_id')
 
-        cart_item_service = self.service_class().get('cart_item_service')
+        cart_item_service = self._get_service_class().get('cart_item_service')
         calculate_product_success = cart_item_service.diminish_product(request.user, product_id)
 
         if not calculate_product_success:
@@ -114,7 +112,7 @@ class ReservationViewSet(mixins.CreateModelMixin,
     }
 
     @staticmethod
-    def service_class(user=None):
+    def _get_service_class(user=None):
         return {
             'reservation_service': ReservationService(user=user)
         }
@@ -125,7 +123,7 @@ class ReservationViewSet(mixins.CreateModelMixin,
     def destroy(self, request, *args, **kwargs):
         product_id = kwargs.get('product_id')
 
-        reserved_service = self.service_class(user=request.user).get('reservation_service')
+        reserved_service = self._get_service_class(user=request.user).get('reservation_service')
         reserved_service.deleting_reserved_product(product_id)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -145,7 +143,7 @@ class OrderViewSet(mixins.CreateModelMixin,
     }
 
     @staticmethod
-    def service_class(user=None):
+    def _get_service_class(user=None):
         return {
             'order_service': OrderService()
         }

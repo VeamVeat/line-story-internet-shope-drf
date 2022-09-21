@@ -6,6 +6,8 @@ from django.core.validators import RegexValidator, MinValueValidator
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import AbstractUser
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from users.managers import UserManager
 from products.models import File
@@ -123,3 +125,11 @@ class Wallet(models.Model):
     class Meta:
         unique_together = (("user", "id"),)
         permissions = (("can_add_money", "top up balance"),)
+
+
+@receiver(post_save, sender=User)
+def create_profile_and_wallet(sender, instance, created, **kwargs):
+    if created:
+        file = File.objects.create(image='users/photo_profile/default.png')
+        Profile.objects.create(user=instance, image=file)
+        Wallet.objects.create(user=instance)

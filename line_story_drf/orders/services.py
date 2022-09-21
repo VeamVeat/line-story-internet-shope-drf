@@ -15,7 +15,8 @@ class OrderService:
             user,
             total_price_product,
             total_count_product,
-            product_all, address
+            product_all,
+            address
     ):
         instance = self.__model.objects.create(
             user=user,
@@ -52,7 +53,7 @@ class CartItemService:
         total_price = self.get_total_price(user)
         user_balance = user.wallet.balance
 
-        is_user_money = user_balance < total_price
+        is_user_money = user_balance > total_price
         return is_user_money
 
     def get_total_price(self, user):
@@ -147,16 +148,16 @@ class ReservationService:
         self.__model = Reservation
         self.__user = user
 
-    def make_reservation(self, product_id, count_product):
+    def make_reservation(self, product_id, quantity):
         product = get_object_or_404(Product, id=product_id)
 
         object_reservation = self.__model(
             user=self.__user,
-            quantity=count_product,
+            quantity=quantity,
             product_id=product_id
         )
 
-        product.quantity -= count_product
+        product.quantity -= quantity
         product.save()
 
         object_reservation.is_reserved = True

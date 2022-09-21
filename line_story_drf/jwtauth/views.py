@@ -1,9 +1,12 @@
 from django.contrib import auth
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth import get_user_model
+from rest_framework.generics import get_object_or_404, UpdateAPIView
+from rest_framework.mixins import UpdateModelMixin
 from rest_framework.response import Response
 from rest_framework import permissions, mixins, status, generics
 from rest_framework.decorators import action
+from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -15,18 +18,19 @@ from jwtauth.serializers import (
     LogoutSerializer,
     TokenObtainMySerializer,
     SetNewPasswordSerializer,
-    ResetPasswordEmailSerializer,
+    ResetPasswordEmailSerializer, VerifyEmailSerializer,
 )
 from utils.mixins import viewset_mixins
+from utils.redis.services import RedisService
 
 User = get_user_model()
 
 
 class LoginViewSet(generics.GenericAPIView):
     serializer_class = LoginSerializer
-    permission_classes = (permissions.AllowAny, IsBlockedPermissions)
+    permission_classes = (permissions.AllowAny,)
 
-    def post(self, request):
+    def post(self, request, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -40,32 +44,67 @@ class LoginViewSet(generics.GenericAPIView):
             **user.tokens
         }
 
-        return Response(user_response_data, status=status.HTTP_201_CREATED)
+        return Response(user_response_data, status=status.HTTP_200_OK)
 
 
-class LogoutViewSet(mixins.UpdateModelMixin,
+class LogoutViewSet(mixins.CreateModelMixin,
                     GenericViewSet):
     serializer_class = LogoutSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        return Response(
+            {'success': 'You have successfully logged out'},
+            status=status.HTTP_201_CREATED
+        )
+
 
 class RegisterUserViewSet(mixins.CreateModelMixin,
+                          viewset_mixins.MyViewSetMixin,
                           GenericViewSet):
+    queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = (permissions.AllowAny,)
+    serializer_class_by_action = {
+        'create': RegisterSerializer
+    }
 
-    def get_queryset(self):
-        return User.objects.filter(user=self.request.user)
+    @staticmethod
+    def _get_service_class(user=None):
+        return {
+            'user_service': UserService()
+        }
 
 
-class VerifyEmailViewSet(generics.UpdateAPIView):
-    permission_classes = (permissions.AllowAny, IsBlockedPermissions)
+class VerifyEmailAPIView(mixins.UpdateModelMixin,
+                         viewset_mixins.MyViewSetMixin,
+                         GenericViewSet):
+    queryset = User.objects.all()
+    serializer_class = VerifyEmailSerializer
+    permission_classes = (permissions.AllowAny,)
+    serializer_class_by_action = {
+        'partial_update': VerifyEmailSerializer,
+    }
 
-    def patch(self, request, *args, **kwargs):
-        token = request.data.get('token')
+    @staticmethod
+    def _get_service_class(user=None):
+        return {
+            'user_service': UserService()
+        }
 
-        user_service = UserService()
-        user = user_service.confirm_registration(token)
+    def update(self, request, **kwargs):
+        redis_service = RedisService()
+        user_id = redis_service.get(request.data.get('token'))
+        user = get_object_or_404(User, pk=user_id)
+
+        serializer = self.get_serializer(user, data=request.data, partial=kwargs.get('partial'))
+        serializer.is_valid(raise_exception=True)
+
+        user = serializer.save()
 
         return Response({
             'email': user.email,
@@ -81,7 +120,7 @@ class TokenObtainPairAPIView(TokenObtainPairView):
 class PasswordResetViewSet(mixins.UpdateModelMixin,
                            viewset_mixins.MyViewSetMixin,
                            GenericViewSet):
-    serializer_class = None
+    serializer_class = ResetPasswordEmailSerializer
     queryset = User.objects.all()
     permission_classes = (permissions.IsAuthenticated, IsBlockedPermissions)
 
@@ -89,9 +128,12 @@ class PasswordResetViewSet(mixins.UpdateModelMixin,
         'email': ResetPasswordEmailSerializer,
         'complete': SetNewPasswordSerializer,
     }
-    service_class = {
-        'user_service': UserService()
-    }
+
+    @staticmethod
+    def _get_service_class(user=None):
+        return {
+            'user_service': UserService()
+        }
 
     @action(methods=['POST'],
             detail=False)
@@ -102,15 +144,15 @@ class PasswordResetViewSet(mixins.UpdateModelMixin,
         email = serializer.data.get('email')
         domain = get_current_site(request=request).domain
 
-        user_service = self.service_class.get('user_service')
-        user_service.send_email_to_password_reset(email, domain)
+        user_service = self._get_service_class().get('user_service')
+        user_service.send_email_to_password_reset_confirm(email, domain)
 
         return Response(
             {'success': 'We have sent you a link to reset your password'},
             status=status.HTTP_200_OK
         )
 
-    @action(methods=['POST'],
+    @action(methods=['GET'],
             detail=False,
             url_path=r'confirm/(?P<uid64>\w+)/(?P<token>[-\w]+)',
             url_name='confirm')
@@ -118,7 +160,7 @@ class PasswordResetViewSet(mixins.UpdateModelMixin,
         uid64 = kwargs.get('uid64', None)
         token = kwargs.get('token', None)
 
-        user_service = self.service_class.get('user_service')
+        user_service = self._get_service_class().get('user_service')
         user_service.check_token_to_reset_password(uid64, token)
         return Response(
             {'success': 'True',
@@ -127,9 +169,8 @@ class PasswordResetViewSet(mixins.UpdateModelMixin,
             status=status.HTTP_200_OK
         )
 
-    @action(methods=['POST'],
-            detail=False,
-            url_path='complete/')
+    @action(methods=['PATCH'],
+            detail=False)
     def complete(self, request, *args, **kwargs):
         self.partial_update(request, *args, **kwargs)
         return Response(
@@ -140,7 +181,7 @@ class PasswordResetViewSet(mixins.UpdateModelMixin,
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
 
-        serializer = self.get_serializer(data=request.data, partial=partial)
+        serializer = self.get_serializer(request.user, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 

@@ -7,6 +7,8 @@ from django.db import models
 
 from products.managers import ProductManager
 from utils.mixins.model_mixins import CreatedAtMixin
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class ProductType(models.Model):
@@ -102,3 +104,9 @@ class Product(CreatedAtMixin):
 
 class ProductFile(File):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_file')
+
+
+@receiver(post_save, sender=Product)
+def create_product(sender, instance, created, **kwargs):
+    if created:
+        ProductFile.objects.create(product_id=instance.id, image='users/photo_profile/default.png')

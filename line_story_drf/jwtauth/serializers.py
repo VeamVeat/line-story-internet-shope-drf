@@ -105,9 +105,9 @@ class LoginSerializer(serializers.ModelSerializer):
 class LogoutSerializer(serializers.ModelSerializer):
     token = serializers.CharField(min_length=6)
 
-    def save(self, **kwargs):
+    def save(self):
         try:
-            token = kwargs.get('token')
+            token = self.validated_data.get('token')
             RefreshToken(token).blacklist()
         except TokenError:
             self.fail('bad token')
@@ -145,10 +145,6 @@ class SetNewPasswordSerializer(serializers.ModelSerializer):
     token = serializers.CharField(max_length=68, min_length=1, write_only=True)
     uid64 = serializers.CharField(max_length=68, min_length=1, write_only=True)
 
-    class Meta:
-        model = User
-        fields = ['password', 'token', 'uid64']
-
     def validate(self, attrs):
         try:
             token = attrs.get('token')
@@ -163,11 +159,28 @@ class SetNewPasswordSerializer(serializers.ModelSerializer):
             raise AuthenticationFailed('The reset link is isvalid', 401)
         return attrs
 
-    def update(self, instance, validated_data):
+    def update(self, user, validated_data):
         password = validated_data.get('password')
 
         user_service = self.context['user_service']
-        user = self.context.get('request').user
 
         instance = user_service.set_password(user, password)
         return instance
+
+    class Meta:
+        model = User
+        fields = ['password', 'token', 'uid64']
+
+
+class VerifyEmailSerializer(serializers.ModelSerializer):
+    token = serializers.CharField(max_length=68, min_length=1, write_only=True)
+
+    def update(self, user, validated_data):
+        token = validated_data.get('token')
+        user_service = self.context['user_service']
+        user = user_service.confirm_registration(user, token)
+        return user
+
+    class Meta:
+        model = User
+        fields = ['token']

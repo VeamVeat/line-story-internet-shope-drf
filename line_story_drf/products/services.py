@@ -8,9 +8,7 @@ class ProductServices:
 
     @staticmethod
     def get_all_product_id_in_cart(user):
-        all_product_id_in_cart = list(
-            CartItem.objects.get_all_product_in_cart(user).values_list('product__id', flat=True)
-        )
+        all_product_id_in_cart = CartItem.objects.get_all_product_in_cart(user).values_list('product__id', flat=True)
 
         return all_product_id_in_cart
 
