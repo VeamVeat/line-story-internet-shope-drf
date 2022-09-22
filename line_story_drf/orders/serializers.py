@@ -124,9 +124,9 @@ class OrderCreateSerializer(serializers.ModelSerializer):
         cart_item_service = self.context['cart_item_service']
         order_service = self.context['order_service']
 
-        cart_item_current_user = cart_item_service.get_all_cart_item(user)
-        product_all = cart_item_service.get_products_list(cart_item_current_user)
-        total_count = cart_item_service.get_total_product_count(cart_item_current_user)
+        all_cart_item_current_user = cart_item_service.get_all_cart_item(user)
+        product_all = cart_item_service.get_products_list(all_cart_item_current_user)
+        total_count = cart_item_service.get_total_product_count(all_cart_item_current_user)
         total_price = cart_item_service.get_total_price(user)
 
         instance = order_service.order_create(

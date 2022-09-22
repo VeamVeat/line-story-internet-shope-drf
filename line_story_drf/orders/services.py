@@ -44,9 +44,9 @@ class CartItemService:
         return total_count
 
     @staticmethod
-    def get_products_list(cart_item_current_user):
+    def get_products_list(all_cart_item_current_user):
         products = [product.product.get_product_in_the_dict
-                    for product in cart_item_current_user]
+                    for product in all_cart_item_current_user]
         return products
 
     def check_money_for_make_order(self, user):
@@ -64,7 +64,7 @@ class CartItemService:
         return total_price
 
     def get_quantity_product_in_cart(self, user, product_id):
-        product = self.__get_product_in_cart_by_product_id(user, product_id)
+        product = self.__get_product_in_cart_item_by_product_id(user, product_id)
         return product.quantity
 
     def increase_product(self, user, product_id):
@@ -73,7 +73,7 @@ class CartItemService:
         :param product_id: product_id
         :return: product success
         """
-        cart_product = self.__get_product_in_cart_by_product_id(user, product_id)
+        cart_item = self.__get_product_in_cart_item_by_product_id(user, product_id)
         product = get_object_or_404(Product, id=product_id)
 
         if not product.is_stock:
@@ -82,8 +82,8 @@ class CartItemService:
         product.quantity -= 1
         product.save()
 
-        cart_product.quantity += 1
-        cart_product.save()
+        cart_item.quantity += 1
+        cart_item.save()
 
         return True
 
@@ -93,17 +93,17 @@ class CartItemService:
         :param product_id: product_id
         :return: product success
         """
-        cart_product = self.__get_product_in_cart_by_product_id(user, product_id)
+        cart_item = self.__get_product_in_cart_item_by_product_id(user, product_id)
         product = get_object_or_404(Product, id=product_id)
 
-        if cart_product.quantity == 1:
+        if cart_item.quantity == 1:
             return False
 
         product.quantity += 1
         product.save()
 
-        cart_product.quantity -= 1
-        cart_product.save()
+        cart_item.quantity -= 1
+        cart_item.save()
         return True
 
     def delete_product(self, user, product_id):
@@ -134,13 +134,13 @@ class CartItemService:
     def get_all_cart_item(self, user):
         return self.__model.objects.filter(user=user).select_related('product')
 
-    def __get_product_in_cart_by_product_id(self, user, product_id):
-        cart_product = get_object_or_404(
+    def __get_product_in_cart_item_by_product_id(self, user, product_id):
+        cart_item = get_object_or_404(
             self.__model.objects.select_related('product'),
             user=user,
             product_id=product_id
         )
-        return cart_product
+        return cart_item
 
 
 class ReservationService:

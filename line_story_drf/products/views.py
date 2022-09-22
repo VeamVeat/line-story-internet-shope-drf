@@ -3,7 +3,6 @@ from django.views.generic import DeleteView
 from django_filters import rest_framework as rest_filters
 from rest_framework import filters, permissions
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.response import Response
 
 from products.filters import ProductFilter
 from products.models import ProductFile, Product

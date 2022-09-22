@@ -85,7 +85,7 @@ class CartViewSet(mixins.CreateModelMixin,
         product_id = serializer.data.get('product_id')
 
         cart_item_service = self._get_service_class().get('cart_item_service')
-        calculate_product_success = cart_item_service.diminish_product(request.user, product_id)
+        calculate_product_success = cart_item_service.increase_product(request.user, product_id)
 
         if not calculate_product_success:
             return Response(

@@ -1,12 +1,10 @@
 from django.contrib import auth
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth import get_user_model
-from rest_framework.generics import get_object_or_404, UpdateAPIView
-from rest_framework.mixins import UpdateModelMixin
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import permissions, mixins, status, generics
 from rest_framework.decorators import action
-from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 
