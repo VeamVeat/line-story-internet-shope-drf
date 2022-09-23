@@ -11,6 +11,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserBirthdaySerializer(serializers.ModelSerializer):
+    birthday = serializers.DateField()
+
     class Meta:
         model = User
         fields = ("birthday",)
@@ -23,10 +25,13 @@ class ImageProfileSerializer(serializers.ModelSerializer):
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
-    phone = serializers.CharField(min_length=10)
+    phone = serializers.CharField(min_length=11)
     region = serializers.CharField(min_length=5)
     image = ImageProfileSerializer(read_only=True)
-    user = UserBirthdaySerializer()
+    birthday = serializers.DateField(source='user.birthday')
+
+    def validate(self, attrs):
+        return attrs
 
     def update(self, instance, validated_data):
 
@@ -36,7 +41,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
             'phone': validated_data.get('phone', request_user.profile.phone),
             'region': validated_data.get('region', request_user.profile.region),
             'image': validated_data.get('image', request_user.profile.image.image),
-            'birthday': validated_data.get('birthday', request_user.birthday),
+            'birthday': validated_data.get('user').get('birthday', request_user.birthday),
             'user': self.context.get('request').user
         }
 
@@ -47,7 +52,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('phone', 'region', 'image', 'user', 'user')
+        fields = ('phone', 'region', 'image', 'birthday')
 
 
 class ProfileDetailSerializer(serializers.ModelSerializer):

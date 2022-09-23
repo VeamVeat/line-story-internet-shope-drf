@@ -11,15 +11,16 @@ from decimal import Decimal
 
 
 class TestCartItemService:
-    cart_item_service = CartItemService()
+
+    __cart_item_service = CartItemService()
 
     def __get_total_count_product_cart(self, user):
-        all_cart_item_current_user = self.cart_item_service.get_all_cart_item(user)
-        return self.cart_item_service.get_total_product_count(all_cart_item_current_user)
+        all_cart_item_current_user = self.__cart_item_service.get_all_cart_item(user)
+        return self.__cart_item_service.get_total_product_count(all_cart_item_current_user)
 
     def __get_products_list(self, user):
-        all_cart_item_current_user = self.cart_item_service.get_all_cart_item(user)
-        return self.cart_item_service.get_products_list(all_cart_item_current_user)
+        all_cart_item_current_user = self.__cart_item_service.get_all_cart_item(user)
+        return self.__cart_item_service.get_products_list(all_cart_item_current_user)
 
     @staticmethod
     def __is_product_in_cart_item_by_user(cart_item):
@@ -43,18 +44,18 @@ class TestCartItemService:
 
     def test_check_money_for_make_order(self, get_client_of_cart_item):
         _, cart_item = get_client_of_cart_item
-        is_user_money = self.cart_item_service.check_money_for_make_order(cart_item.user)
+        is_user_money = self.__cart_item_service.check_money_for_make_order(cart_item.user)
         assert is_user_money
 
     def test_get_total_price(self, get_client_of_cart_item):
         _, cart_item = get_client_of_cart_item
-        total_price_after = self.cart_item_service.get_total_price(cart_item.user)
+        total_price_after = self.__cart_item_service.get_total_price(cart_item.user)
         total_price_before = TEST_QUANTITY_ONE_PRODUCT_IN_CART_ITEM * Decimal(TEST_PRICE_PRODUCT)
         assert total_price_before == total_price_after
 
     def test_get_quantity_product_in_cart(self, get_client_of_cart_item):
         _, cart_item = get_client_of_cart_item
-        product_quantity = self.cart_item_service.get_quantity_product_in_cart(
+        product_quantity = self.__cart_item_service.get_quantity_product_in_cart(
             cart_item.user,
             cart_item.product.id
         )
@@ -63,7 +64,7 @@ class TestCartItemService:
     def test_increase_product(self, get_client_of_cart_item):
         _, cart_item = get_client_of_cart_item
 
-        is_increase_product = self.cart_item_service.increase_product(
+        is_increase_product = self.__cart_item_service.increase_product(
             cart_item.user,
             cart_item.product.id
         )
@@ -75,7 +76,7 @@ class TestCartItemService:
     def test_diminish_product(self, get_client_of_cart_item):
         _, cart_item = get_client_of_cart_item
 
-        is_increase_product = self.cart_item_service.diminish_product(
+        is_increase_product = self.__cart_item_service.diminish_product(
             cart_item.user,
             cart_item.product.id
         )
@@ -87,7 +88,7 @@ class TestCartItemService:
     def test_delete_product(self, get_client_of_cart_item):
         _, cart_item = get_client_of_cart_item
 
-        self.cart_item_service.delete_product(
+        self.__cart_item_service.delete_product(
             cart_item.user,
             cart_item.product.id
         )
@@ -98,19 +99,19 @@ class TestCartItemService:
         user = create_user
         product = create_product
 
-        cart_item = self.cart_item_service.add_product(user, product.id)
+        cart_item = self.__cart_item_service.add_product(user, product.id)
 
         assert cart_item.product.id == product.id
 
     def test_clear(self, get_client_of_cart_item):
         _, cart_item = get_client_of_cart_item
 
-        self.cart_item_service.clear(cart_item.user)
+        self.__cart_item_service.clear(cart_item.user)
         product_exist = self.__is_product_in_cart_item(cart_item)
         assert not product_exist
 
     def test_get_all_cart_item(self, get_client_of_cart_item):
         _, cart_item = get_client_of_cart_item
 
-        cart_item = self.cart_item_service.get_all_cart_item(cart_item.user)
+        cart_item = self.__cart_item_service.get_all_cart_item(cart_item.user)
         assert cart_item.count() == 1
