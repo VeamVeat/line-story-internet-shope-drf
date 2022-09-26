@@ -8,7 +8,6 @@ from tests.settings import TEST_EMAIL_USER
 
 def test_reset_password_email(get_auth_client):
     url_password_reset_email = reverse("jwtauth:password-reset-email")
-
     api_client, _ = get_auth_client
 
     response = api_client.post(

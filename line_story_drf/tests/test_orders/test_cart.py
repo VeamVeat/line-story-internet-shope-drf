@@ -14,6 +14,7 @@ class TestCart:
 
         response = client.get(url_cart_list)
         assert response.status_code == HTTP_200_OK
+        assert len(response.data) == 1
 
     def test_cart_item_create(self, get_auth_client, create_product):
         product = create_product
@@ -76,7 +77,10 @@ class TestCart:
 
         response = client.delete(url_cart_create)
 
-        is_product_in_cart_item = CartItem.objects.filter(user=cart_item.user, product_id=cart_item.product).exists()
+        is_product_in_cart_item = CartItem.objects.filter(
+            user=cart_item.user,
+            product_id=cart_item.product
+        ).exists()
 
         assert response.status_code == HTTP_204_NO_CONTENT
-        assert not is_product_in_cart_item
+        assert is_product_in_cart_item is False

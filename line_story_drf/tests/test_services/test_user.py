@@ -30,7 +30,7 @@ class TestUserService:
         user.refresh_from_db()
 
         assert user.id == user_auth.id
-        assert is_authenticate
+        assert is_authenticate is True
 
     def test_update_profile(self, get_auth_client):
         _, user = get_auth_client
@@ -74,13 +74,13 @@ class TestUserService:
         _, user = get_auth_client
 
         user = self.__user_services.blocking_user(user.id)
-
         user.refresh_from_db()
 
-        assert user.is_blocked
+        assert user.is_blocked is True
+        assert isinstance(user.is_blocked, bool)
 
     @pytest.mark.django_db
-    def test_register_user(self, client, user_registration_data):
+    def test_register_user(self, user_registration_data):
         self.__user_services.register_user(
             TEST_DOMAIN,
             user_registration_data.get('email'),
@@ -88,7 +88,9 @@ class TestUserService:
             user_registration_data.get('password')
         )
         massage = mail.outbox[0].body
+
         assert massage
+        assert isinstance(massage, str)
 
     @pytest.mark.django_db
     def test_confirm_registration(self, create_user):
@@ -103,11 +105,14 @@ class TestUserService:
 
         user = self.__user_services.confirm_registration(user, rand_token)
 
-        assert user.is_active
+        assert user.is_active is True
+        assert isinstance(user.is_active, bool)
 
     def test_send_email_to_password_reset_confirm(self, get_auth_client):
         client, user = get_auth_client
 
         self.__user_services.send_email_to_password_reset_confirm(user.email, TEST_DOMAIN)
         massage = mail.outbox[0].body
+
         assert massage
+        assert isinstance(massage, str)

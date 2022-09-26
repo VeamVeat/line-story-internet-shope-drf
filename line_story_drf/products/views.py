@@ -21,7 +21,7 @@ class ProductAPIView(ListAPIView):
 
 
 class ProductDetailAPIView(RetrieveAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     lookup_url_kwarg = 'product_id'
     queryset = Product.objects.all()
     serializer_class = ProductSerializer

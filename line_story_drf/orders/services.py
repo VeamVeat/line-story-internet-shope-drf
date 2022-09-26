@@ -58,9 +58,11 @@ class CartItemService:
 
     def get_total_price(self, user):
         cart_item = self.get_all_cart_item(user)
-        total_price = list(cart_item.aggregate(
-            total_price=models.Sum(F('product__price') * F('quantity'))
-        ).values())[0]
+        total_price = list(
+            cart_item.aggregate(
+                total_price=models.Sum(F('product__price') * F('quantity'))
+            ).values()
+        )[0]
         return total_price
 
     def get_quantity_product_in_cart(self, user, product_id):

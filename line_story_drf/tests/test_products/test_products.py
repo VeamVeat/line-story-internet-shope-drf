@@ -12,8 +12,8 @@ def test_product_list(get_auth_client, create_product):
     )
 
     response = client.get(url_product_all)
-    number_of_products_created = len(response.data)
-    assert number_of_products_created == 1
+
+    assert len(response.data) == 1
 
 
 @pytest.mark.django_db

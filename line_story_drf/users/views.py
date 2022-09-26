@@ -1,10 +1,8 @@
 from django.shortcuts import redirect
 from django.contrib import auth
-from rest_framework import mixins, permissions, status
-from rest_framework.decorators import action
+from rest_framework import mixins, permissions
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from line_story_drf.permissions import IsBlockedPermissions
@@ -32,7 +30,7 @@ class ProfileViewSet(mixins.UpdateModelMixin,
     permission_classes = (IsAuthenticated, IsBlockedPermissions)
 
     serializer_class_by_action = {
-        'retrieve': ProfileUpdateSerializer,
+        'partial_update': ProfileUpdateSerializer,
         'detail': ProfileDetailSerializer
     }
 
@@ -52,7 +50,7 @@ class BlockingUserView(mixins.UpdateModelMixin,
     queryset = User.objects.all()
     serializer_class = BlockingUserSerializer
     lookup_field = 'id'
-    permission_classes = None
+    permission_classes = IsNotCurrentUserPermissions
 
     serializer_class_by_action = {
         'update': BlockingUserSerializer,
@@ -66,16 +64,15 @@ class BlockingUserView(mixins.UpdateModelMixin,
 
     def get_permissions(self):
         if self.request.method == 'POST':
-            self.permission_classes = [IsNotCurrentUserPermissions, permissions.IsAdminUser]
+            self.permission_classes = [permissions.IsAdminUser, IsNotCurrentUserPermissions]
         else:
             self.permission_classes = [permissions.IsAdminUser, permissions.IsAuthenticated]
 
         return super(BlockingUserView, self).get_permissions()
 
     def update(self, request, *args, **kwargs):
-        partial = True
         user = get_object_or_404(User, pk=kwargs.get('id'))
-        serializer = self.get_serializer(user, data=kwargs, partial=partial)
+        serializer = self.get_serializer(user, data=kwargs, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
 

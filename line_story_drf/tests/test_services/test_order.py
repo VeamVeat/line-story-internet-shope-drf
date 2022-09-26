@@ -3,9 +3,8 @@ from orders.services import OrderService, CartItemService
 
 class TestOrderService:
 
-    def test_order_create(self, get_client_of_cart_item):
-        client, cart_item = get_client_of_cart_item
-
+    @staticmethod
+    def __get_data_from_order_create(cart_item):
         cart_item_service = CartItemService()
         cart_item_current_user = cart_item_service.get_all_cart_item(cart_item.user)
         product_all = cart_item_service.get_products_list(cart_item_current_user)
@@ -19,6 +18,13 @@ class TestOrderService:
             'product_all': product_all,
             'address': 'Ростовская область'
         }
+
+        return data_from_order_create
+
+    def test_order_create(self, get_client_of_cart_item):
+        client, cart_item = get_client_of_cart_item
+
+        data_from_order_create = self.__get_data_from_order_create(cart_item)
 
         order_service = OrderService()
         order = order_service.order_create(**data_from_order_create)
