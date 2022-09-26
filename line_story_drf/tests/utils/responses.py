@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 
 
-class MyHttpResponse(HttpResponse):
+class TestHttpResponse(HttpResponse):
 
     def __call__(self, request):
         if request.META['USER_COUNTRY'] == 'None':
