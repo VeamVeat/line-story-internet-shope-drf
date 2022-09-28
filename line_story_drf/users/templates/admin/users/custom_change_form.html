@@ -7,7 +7,6 @@
             <form action="{% url 'admin:blocking_user' id=user_id %}" method="POST">
             {% csrf_token %}
             <input type="image" src="{% static '/admin/img/user/ban-user.png' %}" value="Blocked" width="50" height="50"/>
-
             </form>
         </span>
     </div>
