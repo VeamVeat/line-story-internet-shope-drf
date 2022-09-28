@@ -97,7 +97,6 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': os.getenv("DB_NAME", "line_story_drf"),
-
         'USER': os.getenv("DB_USER", "postgresql"),
         'PASSWORD': os.getenv("DB_PASSWORD", "veamveat"),
         'HOST': os.getenv("DB_HOST", "localhost"),
@@ -252,7 +251,5 @@ CACHES = {
         },
     },
 }
-
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
 LOGGING = logging()

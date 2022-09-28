@@ -64,7 +64,6 @@ def get_auth_blocked_client(client, create_user, get_data_login_user):
 
 
 @pytest.fixture()
-
 def get_auth_client_with_refresh_token(client, create_user):
     user = get_object_or_404(User, email=TEST_EMAIL_USER)
 

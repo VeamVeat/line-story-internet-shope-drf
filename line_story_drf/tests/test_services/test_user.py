@@ -3,16 +3,22 @@ from uuid import uuid4
 
 import pytest
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core import mail
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import get_object_or_404
 
-from tests.settings import TEST_NEW_PASSWORD_USER, TEST_DOMAIN, TEST_PHONE_USER, TEST_REGION_USER, TEST_BIRTHDAY_USER
+from tests.settings import (
+    TEST_NEW_PASSWORD_USER,
+    TEST_DOMAIN,
+    TEST_PHONE_USER,
+    TEST_REGION_USER,
+    TEST_BIRTHDAY_USER
+)
 from users.models import User
 from users.services import UserService
 from utils.redis.services import RedisService
 from utils.uid64.services import Uid64Service
-from django.core import mail
 
 
 class TestUserService:

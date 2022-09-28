@@ -8,18 +8,20 @@ from rest_framework.decorators import action
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from line_story_drf.permissions import IsBlockedPermissions
-from users.services import UserService
 from jwtauth.serializers import (
     RegisterSerializer,
     LoginSerializer,
     LogoutSerializer,
     TokenObtainMySerializer,
     SetNewPasswordSerializer,
-    ResetPasswordEmailSerializer, VerifyEmailSerializer,
+    ResetPasswordEmailSerializer,
+    VerifyEmailSerializer,
 )
+from users.services import UserService
 from utils.mixins import viewset_mixins
 from utils.redis.services import RedisService
+from line_story_drf.permissions import IsBlockedPermissions
+
 
 User = get_user_model()
 
