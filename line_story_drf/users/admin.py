@@ -2,9 +2,8 @@ from django.contrib import admin
 from django.urls import path
 from django.utils.safestring import mark_safe
 
-from products.models import File
 from users.forms import ProfileAdminForm
-from users.models import User, Profile, Wallet
+from users.models import User, Profile
 from users.views import BlockingUserView
 
 
