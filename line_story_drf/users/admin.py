@@ -15,7 +15,6 @@ class UserAdmin(admin.ModelAdmin):
     list_filter = ('first_name', 'last_name', 'email')
     search_fields = ('first_name', 'last_name', 'email')
     ordering = ('email',)
-    # readonly_fields = ('is_blocked',)
 
     change_form_template = 'admin/users/custom_change_form.html'
 
