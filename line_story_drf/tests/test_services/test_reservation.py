@@ -7,12 +7,11 @@ class TestReservationService:
 
     @staticmethod
     def __is_product_reserved_by_user(reserved_product):
-        reserved_product_exist = Reservation.objects.filter(
+        is_reserved_product_exist = Reservation.objects.filter(
             user=reserved_product.user,
             product_id=reserved_product.product.id
         ).exists()
-
-        return reserved_product_exist
+        return is_reserved_product_exist
 
     def test_make_reservation(self, create_user, create_product):
         user = create_user
@@ -37,4 +36,4 @@ class TestReservationService:
 
         is_product_reserved = self.__is_product_reserved_by_user(reserved_product)
 
-        assert not is_product_reserved
+        assert is_product_reserved is False

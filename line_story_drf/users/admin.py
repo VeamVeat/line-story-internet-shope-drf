@@ -74,4 +74,3 @@ class ProfileAdmin(admin.ModelAdmin):
             obj.image.image = file
             obj.image.save()
         return super(ProfileAdmin, self).save_model(request, obj, form, change)
-

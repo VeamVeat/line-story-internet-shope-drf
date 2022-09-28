@@ -5,7 +5,9 @@ from tests.settings import (
     TEST_PASSWORD_USER,
     TEST_EMAIL_SUPER_USER,
     TEST_PASSWORD_SUPER_USER,
-    TEST_BIRTHDAY_USER
+    TEST_BIRTHDAY_USER,
+    TEST_NEGATIVE_PASSWORD_USER,
+    TEST_NEGATIVE_BIRTHDAY_USER
 )
 
 
@@ -36,3 +38,28 @@ def user_registration_data():
         'birthday': TEST_BIRTHDAY_USER
     }
     return data_from_registration
+
+
+@pytest.fixture()
+def user_negative_scenarios_registration_password():
+    data_from_registration = {
+        'email': TEST_EMAIL_USER,
+        'password': TEST_PASSWORD_USER,
+        'password2': TEST_NEGATIVE_PASSWORD_USER,
+        'birthday': TEST_BIRTHDAY_USER
+    }
+    return data_from_registration
+
+
+@pytest.fixture()
+def user_negative_scenarios_registration_birthday():
+    data_from_registration = {
+        'email': TEST_EMAIL_USER,
+        'password': TEST_PASSWORD_USER,
+        'password2': TEST_PASSWORD_USER,
+        'birthday': TEST_NEGATIVE_BIRTHDAY_USER
+    }
+    return data_from_registration
+
+
+

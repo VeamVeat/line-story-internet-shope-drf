@@ -11,8 +11,8 @@ class RedisService:
             'str': str
         }
 
-    def get(self, key, val_type='int'):
-        value_type = self.__type_dict.get('str')
+    def get(self, key, val_type='str'):
+        value_type = self.__type_dict.get(val_type)
         value = self.__connect_redis.get(value_type(key))
 
         if value is None:
@@ -22,8 +22,7 @@ class RedisService:
 
     def set(self, key, value, val_type='str'):
         value_type = self.__type_dict.get(val_type)
-        s = value_type(key)
-        self.__connect_redis.set(s, value_type(value))
+        self.__connect_redis.set(value_type(key), value_type(value))
 
     def delete(self, key, val_type='str'):
         """

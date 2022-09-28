@@ -15,7 +15,7 @@ class Country(models.Model):
 
 
 class BlacklistedCountry(models.Model):
-    country = models.OneToOneField(Country, on_delete=models.CASCADE)
+    country = models.OneToOneField(Country, on_delete=models.CASCADE, related_name='country')
 
     class Meta:
         verbose_name = _('country in black list')

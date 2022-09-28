@@ -1,4 +1,5 @@
 from django.urls import reverse
+from rest_framework.status import HTTP_302_FOUND
 
 
 def test_blocking_user(get_super_user_client, create_user):
@@ -12,6 +13,9 @@ def test_blocking_user(get_super_user_client, create_user):
         }
     )
 
-    api_client.post(url_blocking_user)
+    response = api_client.post(url_blocking_user)
     user.refresh_from_db()
-    assert user.is_blocked
+
+    assert response.status_code == HTTP_302_FOUND
+    assert user.is_blocked is True
+    assert isinstance(user.is_blocked, bool)

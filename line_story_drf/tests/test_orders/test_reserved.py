@@ -13,6 +13,7 @@ class TestReserved:
 
         response = client.get(url_cart_list)
         assert response.status_code == HTTP_200_OK
+        assert len(response.data) == 1
 
     def test_reserved_create(self, get_auth_client, create_product):
         product = create_product

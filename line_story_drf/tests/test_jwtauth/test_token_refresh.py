@@ -4,7 +4,7 @@ from rest_framework.status import HTTP_200_OK
 
 
 @pytest.mark.django_db
-def test_token_obtain_pair(client, get_auth_client_with_refresh_token, get_data_login_user):
+def test_token_obtain_pair(get_auth_client_with_refresh_token):
     url = reverse("jwtauth:token_refresh")
     client, refresh_token = get_auth_client_with_refresh_token
 

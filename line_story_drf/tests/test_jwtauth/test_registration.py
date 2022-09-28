@@ -1,9 +1,10 @@
+from urllib.parse import urlparse
+from urllib.parse import parse_qs
+
 import pytest
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 from django.urls import reverse
 from django.core import mail
-from urllib.parse import urlparse
-from urllib.parse import parse_qs
 
 
 @pytest.mark.django_db

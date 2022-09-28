@@ -24,21 +24,21 @@ class CheckCountryByIpMiddleware:
 
     @staticmethod
     def __is_black_list_country(country_name):
-        return BlacklistedCountry.objects.filter(county__reduction=country_name).exists()
+        return BlacklistedCountry.objects.filter(country__reduction=country_name).exists()
 
     def __call__(self, request):
         user_ip = self.__get_ip_by_request(request)
         ip_info = geolite2.lookup(user_ip)
 
         if ip_info is None:
-            request.META['USER_COUNTRY'] = None
+            request.META['USER_COUNTRY'] = 'None'
             self.__logger.info('Country not recognized')
             return self.__get_response(request)
 
         country = ip_info.country
 
         if self.__is_black_list_country(country):
-            return HttpResponseForbidden("This country is blocked by the administrator")
+            return HttpResponseForbidden("This country is blocked by the administrator", 403)
 
         request.META['USER_COUNTRY'] = country
 
