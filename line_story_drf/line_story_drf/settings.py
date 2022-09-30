@@ -55,16 +55,18 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'rest_framework_swagger',
     'django_filters',
-    "drf_yasg"
+    "drf_yasg",
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'countries.middleware.CheckCountryByIpMiddleware',
+    # 'countries.middleware.CheckCountryByIpMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -93,17 +95,27 @@ WSGI_APPLICATION = 'line_story_drf.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': os.getenv("DB_NAME", "line_story_drf"),
+#         'USER': os.getenv("DB_USER", "postgresql"),
+#         'PASSWORD': os.getenv("DB_PASSWORD", "veamveat"),
+#         'HOST': os.getenv("DB_HOST", "localhost"),
+#         'PORT': os.getenv("DB_PORT", "5432")
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv("DB_NAME", "line_story_drf"),
-        'USER': os.getenv("DB_USER", "postgresql"),
-        'PASSWORD': os.getenv("DB_PASSWORD", "veamveat"),
-        'HOST': os.getenv("DB_HOST", "localhost"),
-        'PORT': os.getenv("DB_PORT", "5432")
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'veamveat',
+        'HOST': 'db',
+        'PORT': 5432
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -157,6 +169,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS HEADERS
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
 
 SITE_NAME = "LineStory"
 
