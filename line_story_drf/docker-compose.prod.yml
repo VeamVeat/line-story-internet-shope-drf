@@ -1,17 +1,16 @@
-version: '3.7'
+version: '3'
 
 services:
   web:
     build:
       context: ./
       dockerfile: Dockerfile.prod
-    command: gunicorn line_story_drf.wsgi:application --bild 0.0.0.0:8000
-#    volumes:
-#      - .:/usr/src/line_story_drf
-#    #      - ./static:/usr/src/app/static
-#    #      - ./media:/usr/src/app/media
-    ports:
-      - 8000:8000
+    command: gunicorn line_story_drf.wsgi:application --bind 0.0.0.0:8000
+    expose:
+      - 8000
+    volumes:
+      - static_volume:/home/app/web/staticfiles
+      - static_media:/home/app/web/media
     env_file:
       - ./.env.prod
     depends_on:
@@ -27,85 +26,15 @@ services:
 
   nginx:
     build: ./nginx
-    restart: on-failure
     ports:
       - 1337:80
-#    volumes:
-#      - ./static:/staticfiles
-#      - ./media:/media
+    volumes:
+      - static_volume:/home/app/web/staticfiles
+      - static_media:/home/app/web/media
     depends_on:
       - web
 
 volumes:
   postgres_data:
-
-#    env_file:
-#      - ./.env
-#
-#  nginx:
-#    build: ./nginx
-#    container_name: line_story_internet_shop_nginx
-#    restart: on-failure
-#    ports:
-#      - 80:80
-#    volumes:
-#      - ./static:/staticfiles
-#      - ./media:/media
-#    depends_on:
-#      - web
-
-
-
-#######################################################
-
-#volumes:
-#    pgdata:
-#        driver: local
-#services:
-#    nginx:
-## при падении будет стараться подняться
-#        restart: always
-## только свежий nginx
-#        image: nginx:latest
-## слушает порт 8080
-#        expose:
-#          - 8080
-## мапаем порт 80 на его 8080. Тогда сайт будет доступен по адресу localhost. Убедись, что порт у тебя не занят.
-#        ports:
-#          - "80:8080"
-## монтируем только те директории, в которых лежит статика, т.к. nginx с динамикой не будет работать. Также директорию с логами и файл настройки, который мы подготовили.
-#        volumes:
-#            - ./<project>/static:/srv/www/<project>/static
-#            - ./<project>/media:/srv/www/<project>/media
-#            - ./<project>/logs:/srv/www/<project>/logs
-#            - ./docker/nginx:/etc/nginx/conf.d
-## и nginx зависит от контейнера python. Т.е. python должен быть запущен первым
-#        depends_on:
-#            - python
-#    python:
-#        restart: always
-## указываем откуда собирать образ
-#        build:
-#            context: .
-#            dockerfile: docker/python/Dockerfile
-## монтируем директорию проекта
-#        volumes:
-#            - ./<project>:/srv/www/<project>
-#        expose:
-#          - 8000
-#        ports:
-#            - 8000:8000
-## запускаем gunicorn
-#        command: "gunicorn -c gunicorn.py <project>.wsgi"
-#    postgres:
-## Ниже даже расписывать не хочу, насколько все просто: логин, пароль, БД, порты и т.д.
-#        image: postgres:9.3.22
-#        ports:
-#            - 5432:5432
-#        environment:
-#            POSTGRES_USER: username
-#            POSTGRES_PASSWORD: postgresql_password
-#            POSTGRES_DB: database_name
-#            PGDATA: /var/lib/postgresql/data
-#        volumes:
-#            - pgdata:/var/lib/postgresql/data
+  static_volume:
+  static_media:

@@ -151,7 +151,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
+if DEBUG:
+    STATIC_URL = 'static/'
+else:
+    STATIC_URL = '/staticfiles/'
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATICFILES_DIRS = (
@@ -186,7 +190,6 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
@@ -239,6 +242,19 @@ SIMPLE_JWT = {
 }
 
 SITE_ID = 1
+
+CORS_ORIGIN_WHITELIST = (
+    "http://localhost:8080",
+    "http://localhost:1337",
+    "http://127.0.0.1:8000",
+)
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8080",
+    "http://localhost:1337",
+    "http://127.0.0.1:8000"
+]
+
 
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
