@@ -4,7 +4,7 @@ services:
   web:
     build:
       context: ./
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile-prod
     command: gunicorn line_story_drf.wsgi:application --bind 0.0.0.0:8000
     expose:
       - 8000
@@ -22,19 +22,38 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: veamveat
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - line_story_drf_postgres_data_prod:/var/lib/postgresql/data/
 
   nginx:
     build: ./nginx
     ports:
-      - 1337:80
+      - "1337:80"
     volumes:
       - static_volume:/home/app/web/staticfiles
       - static_media:/home/app/web/media
     depends_on:
       - web
 
+  redis:
+    image: redis
+    depends_on:
+      - web
+
+  celery:
+    build:
+      context: ./
+      dockerfile: Dockerfile-prod
+    command: celery -A line_story_drf worker -l info
+    volumes:
+      - line_story_drf_celery_data_prod:/usr/src/line_story_drf
+    env_file:
+      - ./.env.prod
+    depends_on:
+      - db
+      - redis
+
 volumes:
-  postgres_data:
+  line_story_drf_postgres_data_prod:
+  line_story_drf_celery_data_prod:
   static_volume:
   static_media:
