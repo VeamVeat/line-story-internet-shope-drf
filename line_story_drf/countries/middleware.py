@@ -4,6 +4,7 @@ import logging
 from django.http import HttpResponseForbidden
 
 from countries.models import BlacklistedCountry
+from line_story_drf.settings import HTTPS_IP_INFO
 
 
 class CheckCountryByIpMiddleware:
@@ -24,12 +25,11 @@ class CheckCountryByIpMiddleware:
 
     @staticmethod
     def __get_country_by_ip(user_ip):
-        endpoint = f'https://ipinfo.io/{user_ip}/json'
+        endpoint = f'{HTTPS_IP_INFO} {user_ip}/json'
         response = requests.get(endpoint, verify=True)
 
         if response.status_code != 200:
-            country = None
-            return country
+            return None
 
         data = response.json()
         country = data.get('country')

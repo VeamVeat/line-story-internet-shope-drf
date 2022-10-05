@@ -1,111 +1,123 @@
 NAME_CONTAINER += "web"
 
+DC += docker-compose -f
+MIGRATE += python manage.py migrate --noinput
+
+DC_NAME += 'docker-compose.yml'
+DC_ALPINE_NAME += "docker-compose-alpine.yml"
+DC_PROD_NAME += 'docker-compose-prod.yml'
+DC_PROD_ALPINE_NAME += 'docker-compose-prod-alpine.yml'
+
+
 ## build: Build dev python image.
 build:
-	sudo docker-compose -f docker-compose.yml build $(c)
+	$(DC) $(DC_NAME) build
 
 ## build-prod: Build dev prod python image.
 build-prod:
-	sudo docker-compose -f docker-compose-prod.yml build $(c)
+	$(DC) $(DC_PROD_NAME) build
 
 ## build-alpine: Build dev alpine python image.
 build-alpine:
-	sudo docker-compose -f docker-compose-alpine.yml build $(c)
+	$(DC) $(DC_ALPINE_NAME) build
 
 ## build-prod-alpine: Build prod alpine python image.
 build-prod-alpine:
-	sudo docker-compose -f docker-compose-prod-alpine.yml build $(c)
+	$(DC) $(DC_PROD_ALPINE_NAME) build
 
 ## up: Start dev up containers.
 up:
-	sudo docker-compose -f docker-compose.yml up $(c)
+	$(DC) $(DC_NAME) up
 
 ## up-prod: Start prod up containers.
 up-prod:
-	sudo docker-compose -f docker-compose-prod.yml up $(c)
+	$(DC) $(DC_PROD_NAME) up
 
 ## up-alpine: Start dev alpine up containers.
 up-alpine:
-	sudo docker-compose -f docker-compose-alpine.yml up $(c)
+	$(DC) $(DC_ALPINE_NAME) up
 
 ## up-prod-alpine: Start prod alpine up containers.
 up-prod-alpine:
-	sudo docker-compose -f docker-compose-prod-alpine.yml up $(c)
+	$(DC) $(DC_PROD_ALPINE_NAME) up
 
 ## start: Start dev alpine containers.
 start:
-	sudo docker-compose -f docker-compose.yml start $(c)
+	$(DC) $(DC_NAME) start
 
 ## down: destroy dev containers.
 down:
-	sudo docker-compose -f docker-compose.yml down -v $(c)
+	$(DC) $(DC_NAME) down -v
 
 ## down-alpine: destroy dev alpine containers.
 down-alpine:
-	sudo docker-compose -f docker-compose-alpine.yml down -v $(c)
+	$(DC) $(DC_ALPINE_NAME) down -v
 
 ## down-prod: destroy prod containers.
 down-prod:
-	sudo docker-compose -f docker-compose-prod.yml down -v $(c)
+	$(DC) $(DC_PROD_NAME) down -v
 
 ## down-prod-alpine: destroy prod alpine containers.
 down-prod-alpine:
-	sudo docker-compose -f docker-compose-prod-alpine.yml down -v $(c)
+	$(DC) $(DC_PROD_ALPINE_NAME) down -v
 
 ## stop: stop dev containers.
 stop:
-	sudo docker-compose -f docker-compose.yml stop $(c)
+	$(DC) $(DC_NAME) stop
 
 ## restart: restart dev containers.
 restart:
-	sudo docker-compose -f docker-compose.yml stop $(c)
-	sudo docker-compose -f docker-compose.yml up -d $(c)
+	$(DC) $(DC_NAME) stop
+	$(DC) $(DC_NAME) up -d
 
 ## logs: get logs dev containers.
 logs:
-	sudo docker-compose -f docker-compose.yml logs --tail=100 -f $(c)
+	$(DC) $(DC_NAME) logs --tail=100 -f
 
 ## ps: see running dev containers.
 ps:
-	sudo docker-compose -f docker-compose.yml ps
+	$(DC) $(DC_NAME) ps
 
 ## login-api: enter the dev container web
 login:
-	sudo docker-compose -f docker-compose.yml exec $(NAME_CONTAINER) bash
+	$(DC) $(DC_NAME) exec $(NAME_CONTAINER) bash
 
 ## login-prod-web: enter the prod container web
 login-prod:
-	sudo docker-compose -f docker-compose.prod.yml exec $(NAME_CONTAINER) bash
+	$(DC) $(DC_PROD_NAME) exec $(NAME_CONTAINER) bash
 
 ## login-alpine-web: enter the alpine dev container web
 login-alpine:
-	sudo docker-compose -f docker-compose-alpine.yml exec $(NAME_CONTAINER) /bin/sh
+	$(DC) $(DC_ALPINE_NAME) exec $(NAME_CONTAINER) /bin/sh
 
 ## login-prod-alpine-web: enter the alpine prod container web
 login-prod-alpine:
-	sudo docker-compose -f docker-compose-alpine.yml exec $(NAME_CONTAINER) /bin/sh
+	$(DC) $(DC_PROD_ALPINE_NAME) exec $(NAME_CONTAINER) /bin/sh
 
 db-shell:
-	sudo docker-compose -f docker-compose.yml exec timescale psql -Upostgres
+	$(DC) $(DC_NAME) exec timescale psql -Upostgres
 
 ## prune-all: clear all data container all
 prune-all:
-	sudo sudo docker system prune
+	docker system prune
 
 ## prune-volume: clear all data volume all
 prune-volume:
-	sudo sudo docker volume prune
+	docker volume prune
 
 ## prune-image: clear all data image all
 prune-image:
-	sudo docker image prune
+	docker image prune
 
 ## prune-container: clear all data container all
 prune-container:
-	sudo docker container prune
+	docker container prune
 
 create-superuser:
 	python manage.py createsuperuser
 
-migrate:
-	python manage.py migrate
+migrate-prod:
+	$(DC) $(DC_NAME) exec $(NAME_CONTAINER) $(MIGRATE)
+
+migrate-prod-alpine:
+	$(DC) $(DC_ALPINE_NAME) exec $(NAME_CONTAINER) $(MIGRATE)

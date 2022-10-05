@@ -274,3 +274,4 @@ CELERY_RESULT_SERIALIZER = 'json'
 DJANGO_ALLOWED_HOSTS = 'localhost 127.0.0.1 [::1]'
 
 LOGGING = logging()
+HTTPS_IP_INFO = 'https://ipinfo.io/'

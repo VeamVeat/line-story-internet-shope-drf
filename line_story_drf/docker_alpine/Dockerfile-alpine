@@ -8,13 +8,11 @@ ENV PYTHONUNBUFFERED 1
 RUN apk update \
     && apk add postgresql-dev gcc python3-dev musl-dev
 
-RUN pip install --upgrade pip
-COPY ./requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY docker_alpine/entrypoint-alpine.sh /usr/src/app
 COPY . .
 
-RUN ["chmod", "+x", "/usr/src/app/entrypoint-alpine.sh"]
+RUN pip install --upgrade pip && \
+     pip install -r requirements.txt
 
-ENTRYPOINT ["sh", "/usr/src/app/entrypoint-alpine.sh"]
+RUN ["chmod", "+x", "/usr/src/app/docker_alpine/entrypoint-alpine.sh"]
+
+ENTRYPOINT ["sh", "/usr/src/app/docker_alpine/entrypoint-alpine.sh"]
