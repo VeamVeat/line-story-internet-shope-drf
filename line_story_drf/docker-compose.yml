@@ -5,7 +5,7 @@ services:
     build: ./
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - line_story_drf_web_data_dev:/usr/src/line_story_drf
+      - line_story_drf_web_data:/usr/src/line_story_drf
     ports:
       - "8000:8000"
     env_file:
@@ -19,7 +19,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: veamveat
     volumes:
-      - line_story_drf_postgres_data_dev:/var/lib/postgresql/data/
+      - line_story_drf_postgres_data:/var/lib/postgresql/data/
 
   redis:
     image: redis
@@ -32,7 +32,7 @@ services:
       dockerfile: Dockerfile
     command: celery -A line_story_drf worker -l info
     volumes:
-      - line_story_drf_celery_data_dev:/usr/src/line_story_drf
+      - line_story_drf_celery_data:/usr/src/line_story_drf
     env_file:
       - ./.env
     depends_on:
@@ -40,6 +40,6 @@ services:
       - redis
 
 volumes:
-  line_story_drf_web_data_dev:
-  line_story_drf_postgres_data_dev:
-  line_story_drf_celery_data_dev:
+  line_story_drf_web_data:
+  line_story_drf_postgres_data:
+  line_story_drf_celery_data:

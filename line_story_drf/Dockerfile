@@ -17,4 +17,6 @@ RUN pip install -r requirements.txt
 COPY ./entrypoint.sh .
 COPY . .
 
+RUN ["chmod", "+x", "/usr/src/line_story_drf/entrypoint.sh"]
+
 ENTRYPOINT ["/usr/src/line_story_drf/entrypoint.sh"]
