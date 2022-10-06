@@ -110,3 +110,6 @@ class ProductFile(File):
 def create_product(sender, instance, created, **kwargs):
     if created:
         ProductFile.objects.create(product_id=instance.id, image='users/photo_profile/default.png')
+        from products.tasks import send_notification_new_product_task
+        send_notification_new_product_task.delay(instance.title, instance.price)
+

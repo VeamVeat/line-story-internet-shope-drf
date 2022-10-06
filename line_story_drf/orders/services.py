@@ -2,8 +2,10 @@ from django.db import models
 from django.db.models import F
 from django.shortcuts import get_object_or_404
 
+from orders.tasks import send_purchase_of_goods_notification_task
 from orders.models import Order, CartItem, Reservation
 from products.models import Product
+from products.tasks import send_notification_reserved_product_task
 
 
 class OrderService:
@@ -16,7 +18,7 @@ class OrderService:
             total_price_product,
             total_count_product,
             product_all,
-            address
+            address,
     ):
         instance = self.__model.objects.create(
             user=user,
@@ -28,6 +30,12 @@ class OrderService:
         )
         user.wallet.balance -= total_price_product
         user.save()
+
+        send_purchase_of_goods_notification_task.delay(
+            user.email,
+            total_price_product,
+            total_count_product
+        )
         return instance
 
 
@@ -164,6 +172,14 @@ class ReservationService:
 
         object_reservation.is_reserved = True
         object_reservation.save()
+
+        args_message_notification = (self.__user.id,
+                                     object_reservation.quantity,
+                                     object_reservation.product.price,
+                                     object_reservation.product.title,
+                                     object_reservation.created_at)
+
+        send_notification_reserved_product_task.delay(*args_message_notification)
 
         return object_reservation
 
