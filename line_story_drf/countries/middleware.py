@@ -26,7 +26,11 @@ class CheckCountryByIpMiddleware:
     @staticmethod
     def __get_country_by_ip(user_ip):
         endpoint = f'{HTTPS_IP_INFO} {user_ip}/json'
-        response = requests.get(endpoint, verify=True)
+
+        try:
+            response = requests.get(endpoint, verify=True)
+        except ConnectionError:
+            return None
 
         if response.status_code != 200:
             return None
