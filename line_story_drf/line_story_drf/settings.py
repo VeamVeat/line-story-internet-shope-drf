@@ -95,25 +95,14 @@ WSGI_APPLICATION = 'line_story_drf.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': os.getenv("DB_NAME", "line_story_drf"),
-#         'USER': os.getenv("DB_USER", "postgresql"),
-#         'PASSWORD': os.getenv("DB_PASSWORD", "veamveat"),
-#         'HOST': os.getenv("DB_HOST", "localhost"),
-#         'PORT': os.getenv("DB_PORT", "5432")
-#     }
-# }
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'veamveat',
-        'HOST': 'db',
-        'PORT': 5432
+        'NAME': os.getenv("DB_NAME", "'postgres'"),
+        'USER': os.getenv("DB_USER", "postgres"),
+        'PASSWORD': os.getenv("DB_PASSWORD", "veamveat"),
+        'HOST': os.getenv("DB_HOST", "bd"),
+        'PORT': os.getenv("DB_PORT", "5432")
     }
 }
 

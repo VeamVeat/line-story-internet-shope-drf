@@ -16,7 +16,7 @@ services:
   db:
     image: postgres
     env_file:
-      - ./.env
+      - ./.env.db
     volumes:
       - line_story_drf_postgres_data:/var/lib/postgresql/data/
 
