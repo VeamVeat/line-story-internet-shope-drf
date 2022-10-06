@@ -8,7 +8,6 @@ DC_ALPINE_NAME += "docker-compose-alpine.yml"
 DC_PROD_NAME += 'docker-compose-prod.yml'
 DC_PROD_ALPINE_NAME += 'docker-compose-prod-alpine.yml'
 
-
 ## build: Build dev python image.
 build:
 	$(DC) $(DC_NAME) build

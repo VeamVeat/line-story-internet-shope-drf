@@ -9,17 +9,17 @@ services:
     expose:
       - 8000
     volumes:
-      - static_volume:/home/app/web/staticfiles
-      - static_media:/home/app/web/media
+      - static_volume_prod:/home/app/web/staticfiles
+      - static_media_prod:/home/app/web/media
     env_file:
-      - ./.env.prod
+      - env_project/prod/.env.prod
     depends_on:
       - db
 
   db:
     image: postgres
     env_file:
-      - ./.env.db
+      - env_project/prod/.env.prod.db
     volumes:
       - line_story_drf_postgres_data_prod:/var/lib/postgresql/data/
 
@@ -28,8 +28,8 @@ services:
     ports:
       - "1337:80"
     volumes:
-      - static_volume:/home/app/web/staticfiles
-      - static_media:/home/app/web/media
+      - static_volume_prod:/home/app/web/staticfiles
+      - static_media_prod:/home/app/web/media
     depends_on:
       - web
 
@@ -46,7 +46,7 @@ services:
     volumes:
       - line_story_drf_celery_data_prod:/usr/src/line_story_drf
     env_file:
-      - ./.env.prod
+      - env_project/prod/.env.prod
     depends_on:
       - db
       - redis
@@ -54,5 +54,5 @@ services:
 volumes:
   line_story_drf_postgres_data_prod:
   line_story_drf_celery_data_prod:
-  static_volume:
-  static_media:
+  static_volume_prod:
+  static_media_prod:

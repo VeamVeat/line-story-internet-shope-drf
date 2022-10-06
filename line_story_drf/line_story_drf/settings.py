@@ -19,7 +19,7 @@ from logger.logging import logging
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(os.path.join(BASE_DIR, '.env'))
+load_dotenv(os.path.join(BASE_DIR, 'env_project/.env'))
 
 
 # Quick-start development settings - unsuitable for production
@@ -95,16 +95,18 @@ WSGI_APPLICATION = 'line_story_drf.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv("DB_NAME", "'postgres'"),
-        'USER': os.getenv("DB_USER", "postgres"),
-        'PASSWORD': os.getenv("DB_PASSWORD", "veamveat"),
-        'HOST': os.getenv("DB_HOST", "bd"),
-        'PORT': os.getenv("DB_PORT", "5432")
+    "default": {
+        "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.postgresql_psycopg2"),
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER", "user"),
+        "PASSWORD": os.getenv("DB_PASSWORD", "password"),
+        "HOST": os.getenv("DB_HOST", "localhost"),
+        "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -237,6 +239,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://0.0.0.0:1337",
     "http://127.0.0.1:8000"
 ]
+
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 if DEBUG:
@@ -260,7 +263,8 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
-DJANGO_ALLOWED_HOSTS = 'localhost 127.0.0.1 [::1]'
+DJANGO_ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "6379")
 
 LOGGING = logging()
+
 HTTPS_IP_INFO = 'https://ipinfo.io/'

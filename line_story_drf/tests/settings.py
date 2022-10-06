@@ -19,7 +19,7 @@ from logger.logging import logging
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(os.path.join(BASE_DIR, '.env'))
+load_dotenv(os.path.join(BASE_DIR, 'env_project/.env'))
 
 
 # Quick-start development settings - unsuitable for production
@@ -139,6 +139,7 @@ if DEBUG:
     STATIC_URL = 'static/'
 else:
     STATIC_URL = '/staticfiles/'
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATICFILES_DIRS = (
@@ -231,6 +232,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://0.0.0.0:1337",
     "http://127.0.0.1:8000"
 ]
+
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -249,6 +251,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 DJANGO_ALLOWED_HOSTS = 'localhost 127.0.0.1 [::1]'
 
 LOGGING = logging()
+
 HTTPS_IP_INFO = 'https://ipinfo.io/'
 
 # user

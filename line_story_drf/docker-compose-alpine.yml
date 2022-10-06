@@ -9,7 +9,7 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - ./.env.alpine
+      - env_project/dev/.env.dev
     volumes:
       - line_story_drf_alpine:/usr/src/app
     depends_on:
@@ -23,7 +23,7 @@ services:
   db:
     image: postgres:alpine
     env_file:
-      - ./.env.db
+      - env_project/dev/.env.dev.db
     volumes:
       - line_story_drf_postgres_data_alpine:/var/lib/postgresql/data
 
@@ -34,13 +34,13 @@ services:
     command: >
       sh -c "celery -A line_story_drf worker -l info"
     volumes:
-      - line_story_drf_celery_data_alpine:/usr/src/app
+      - line_story_drf_celery_alpine_data:/usr/src/app
     env_file:
-      - ./.env.alpine
+      - env_project/dev/.env.dev
     depends_on:
       - redis
 
 volumes:
   line_story_drf_alpine:
   line_story_drf_postgres_data_alpine:
-  line_story_drf_celery_data_alpine:
+  line_story_drf_celery_alpine_data:

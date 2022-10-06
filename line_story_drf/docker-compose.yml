@@ -5,20 +5,20 @@ services:
     build: ./
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - line_story_drf_web_data:/usr/src/line_story_drf
+      - line_story_drf_web_data:/usr/src/line_story_drf/api
     ports:
       - "8000:8000"
     env_file:
-      - ./.env
+      - ./env_project/dev/.env.dev
     depends_on:
       - db
 
   db:
     image: postgres
     env_file:
-      - ./.env.db
+      - ./env_project/dev/.env.dev.db
     volumes:
-      - line_story_drf_postgres_data:/var/lib/postgresql/data/
+      - line_story_drf_postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis
@@ -31,9 +31,9 @@ services:
       dockerfile: Dockerfile
     command: celery -A line_story_drf worker -l info
     volumes:
-      - line_story_drf_celery_data:/usr/src/line_story_drf
+      - line_story_drf_celery_data:/usr/src/line_story_api
     env_file:
-      - ./.env
+      - ./env_project/dev/.env.dev
     depends_on:
       - db
       - redis
