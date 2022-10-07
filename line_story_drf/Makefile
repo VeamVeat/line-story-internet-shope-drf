@@ -1,10 +1,10 @@
-NAME_CONTAINER += "web"
+NAME_CONTAINER += 'web'
 
 DC += docker-compose -f
 MIGRATE += python manage.py migrate --noinput
 
 DC_NAME += 'docker-compose.yml'
-DC_ALPINE_NAME += "docker-compose-alpine.yml"
+DC_ALPINE_NAME += 'docker-compose-alpine.yml'
 DC_PROD_NAME += 'docker-compose-prod.yml'
 DC_PROD_ALPINE_NAME += 'docker-compose-prod-alpine.yml'
 
