@@ -25,6 +25,9 @@
 - Pytest 7.1.3
 - Celery 5.2.7
 
+## Используемые технологие
+- Docker 20.10.18
+
 ## Используемые базы данных
 - Posrgresql 2.9.3
 - Redis 4.3.4
@@ -60,6 +63,7 @@
 Для начала склонируйте репозиторий и установить зависимости
 
 `git clone https://github.com/VeamVeat/line_story_internet_shope_drf.git`
+
 `pip install -r requirements.txt`
 
 #### Для локального запуска
