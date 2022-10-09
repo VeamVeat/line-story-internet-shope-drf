@@ -59,6 +59,7 @@
 `git clone https://github.com/VeamVeat/line_story_internet_shope_drf.git`
 
 `pip install -r requirements.txt`
+
 `python manage.py migrate`
 
 #### Для локального запуска
