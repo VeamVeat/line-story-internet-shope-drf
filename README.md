@@ -25,6 +25,9 @@
 - Pytest 7.1.3
 - Celery 5.2.7
 
+## Используемые технологии
+- Docker 20.10.18
+
 ## Используемые базы данных
 - Posrgresql 2.9.3
 - Redis 4.3.4
@@ -60,6 +63,7 @@
 Для начала склонируйте репозиторий и установить зависимости
 
 `git clone https://github.com/VeamVeat/line_story_internet_shope_drf.git`
+
 `pip install -r requirements.txt`
 
 #### Для локального запуска
@@ -72,7 +76,7 @@
 - `pytest` выполняем команду в контейнере для прогона тестов
 - Убеждаемся что наши тесты пройдены
 - <img src="https://user-images.githubusercontent.com/67123448/194768136-8e5d4cf7-0d95-4961-92ec-abcd460239c4.png" align="center" width="600" height="300" />
-- перейти в браузере по ссылке http://0.0.0.0:8000
+- перейти в браузере по ссылке http:/0.0.0.0:8000
 
 #### Для запуска develop версии проекта на alpine
 - `make build-alpine` билдим наш docker-compose файл
@@ -81,7 +85,7 @@
 - `pytest` выполняем команду в контейнере для прогона тестов
 - Убеждаемся что наши тесты пройдены
 - <img src="https://user-images.githubusercontent.com/67123448/194768349-b242136c-7289-46d9-8b40-daf7107ac9e7.png" align="center" width="600" height="300" />
-- - перейти в браузере по ссылке http://0.0.0.0:8000
+- - перейти в браузере по ссылке http:/0.0.0.0:8000
 
 #### Для запуска production версии проекта
 - `make build-prod` билдим наш docker-compose файл
@@ -90,7 +94,7 @@
 - `pytest` выполняем команду в контейнере для прогона тестов
 - Убеждаемся что наши тесты пройдены
 - <img src="https://user-images.githubusercontent.com/67123448/194768404-23240c33-e8b7-485a-8f3e-5e9bface95d3.png" align="center" width="600" height="300" />
-- перейти в браузере по ссылке http://0.0.0.0:1337
+- перейти в браузере по ссылке http:/0.0.0.0:1337
 
 #### Для запуска production версии проекта на alpine
 - `make build-prod-alpine` билдим наш docker-compose файл
@@ -99,4 +103,4 @@
 - `pytest` выполняем команду в контейнере для прогона тестов
 - Убеждаемся что наши тесты пройдены
 - <img src="https://user-images.githubusercontent.com/67123448/194768468-cd9b95c2-3a31-4a0e-9de1-6a2780959700.png" align="center" width="600" height="300" />
-- перейти в браузере по ссылке http://0.0.0.0:1337
+- перейти в браузере по ссылке http:/0.0.0.0:1337
