@@ -99,7 +99,7 @@
 #### Для запуска production версии проекта на alpine
 - `make build-prod-alpine` билдим наш docker-compose файл
 - `make up-prod-alpine` поднимаем наш контейнер со всеми зависимыми сервисами в docker-compose файле
-- `make login-prod-alpine` заходим в раотающий контейнер
+- `make login-prod-alpine` заходим в работающий контейнер
 - `pytest` выполняем команду в контейнере для прогона тестов
 - Убеждаемся что наши тесты пройдены
 - <img src="https://user-images.githubusercontent.com/67123448/194768468-cd9b95c2-3a31-4a0e-9de1-6a2780959700.png" align="center" width="600" height="300" />
