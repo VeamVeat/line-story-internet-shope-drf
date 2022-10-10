@@ -60,11 +60,11 @@
 
 `python3.10 -m venv env`
 
-`cd env`
-
-`cd bin`
+`cd env/bin`
 
 `source activate`
+
+` cd ../.. && cd line_story_drf`
 
 `pip install -r requirements.txt`
 
