@@ -58,6 +58,14 @@
 
 `git clone https://github.com/VeamVeat/line_story_internet_shope_drf.git`
 
+`python3.10 -m venv env`
+
+`cd env`
+
+`cd bin`
+
+`source activate`
+
 `pip install -r requirements.txt`
 
 `python manage.py migrate`
