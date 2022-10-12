@@ -1,8 +1,10 @@
+from datetime import timedelta
+from datetime import datetime
 from django.db import models
 from django.db.models import F
 from django.shortcuts import get_object_or_404
 
-from orders.tasks import send_purchase_of_goods_notification_task
+from orders.tasks import send_purchase_of_goods_notification_task, cart_clear_task
 from orders.models import Order, CartItem, Reservation
 from products.models import Product
 from products.tasks import send_notification_reserved_product_task
@@ -136,6 +138,8 @@ class CartItemService:
         product.quantity -= 1
         product.save()
 
+        cart_clear_task.apply_async((user.id,), expires=datetime.now() + timedelta(days=1))
+
         return cart_item
 
     def clear(self, user):
@@ -173,11 +177,13 @@ class ReservationService:
         object_reservation.is_reserved = True
         object_reservation.save()
 
-        args_message_notification = (self.__user.id,
-                                     object_reservation.quantity,
-                                     object_reservation.product.price,
-                                     object_reservation.product.title,
-                                     object_reservation.created_at)
+        args_message_notification = (
+            self.__user.id,
+            object_reservation.quantity,
+            object_reservation.product.price,
+            object_reservation.product.title,
+            object_reservation.created_at
+        )
 
         send_notification_reserved_product_task.delay(*args_message_notification)
 

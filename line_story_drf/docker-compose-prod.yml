@@ -24,7 +24,7 @@ services:
       - line_story_drf_postgres_data_prod:/var/lib/postgresql/data/
 
   nginx:
-    build: ./nginx
+    build: deployment/nginx
     ports:
       - "1337:80"
     volumes:

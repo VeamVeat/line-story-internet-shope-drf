@@ -4,7 +4,7 @@ services:
   web:
     build:
       context: ./
-      dockerfile: docker_alpine/Dockerfile-alpine
+      dockerfile: deployment/docker_alpine/Dockerfile-alpine
     command: python manage.py runserver 0.0.0.0:8000
     ports:
       - "8000:8000"
@@ -30,9 +30,8 @@ services:
   celery:
     build:
       context: ./
-      dockerfile: docker_alpine/Dockerfile-alpine
-    command: >
-      sh -c "celery -A line_story_drf worker -l info"
+      dockerfile: deployment/docker_alpine/Dockerfile-alpine
+    command: celery -A line_story_drf worker -l info
     volumes:
       - line_story_drf_celery_alpine_data:/usr/src/app
     env_file:
