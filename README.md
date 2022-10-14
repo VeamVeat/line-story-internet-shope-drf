@@ -58,17 +58,14 @@
 
 `git clone https://github.com/VeamVeat/line_story_internet_shope_drf.git`
 
-`python3.10 -m venv env`
-
-`cd env/bin`
-
-`source activate`
-
-` cd ../.. && cd line_story_drf`
-
-`pip install -r requirements.txt`
-
-`python manage.py migrate`
+```Python
+python3.10 -m venv env
+cd env/bin
+source activate
+cd ../.. && cd line_story_drf
+pip install -r requirements.txt
+python manage.py migrate
+```
 
 #### Для локального запуска
 `python manage.py runserver 8000`
